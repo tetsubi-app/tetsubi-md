@@ -63,6 +63,7 @@ import { RecordDialog } from './record-dialog';
 import { ErrorDialog } from './error-dialog';
 import { PanicDialog } from './panic-dialog';
 import { ConvertDialog } from './convert-dialog';
+import { onWriteRequest } from '../disc-list/write';
 import { AboutDialog } from './about-dialog';
 import { DumpDialog } from './dump-dialog';
 import { TopMenu } from './topmenu';
@@ -198,6 +199,15 @@ export const Main = (props: {}) => {
     const [selected, setSelected] = React.useState<number[]>([]);
     const [selectedGroups, setSelectedGroups] = React.useState<number[]>([]);
     const [uploadedFiles, setUploadedFiles] = React.useState<(File | AdaptiveFile)[]>([]);
+    // Tetsubi MD: the disc list hands its songs over here, to go through the usual convert dialog.
+    useEffect(
+        () =>
+            onWriteRequest((files) => {
+                setUploadedFiles(files);
+                dispatch(convertDialogActions.setVisible(true));
+            }),
+        [dispatch]
+    );
     const [lastClicked, setLastClicked] = useState(-1);
     const [moveMenuAnchorEl, setMoveMenuAnchorEl] = React.useState<null | HTMLElement>(null);
     const [showRemainingSpace, setShowRemainingSpace] = useState(true);

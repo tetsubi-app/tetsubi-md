@@ -1466,7 +1466,8 @@ export function convertAndUpload(
                 queueMicrotask(() =>
                     dispatch(
                         uploadDialogActions.setTrackEncodingProgress({
-                            conversionStepName: audioExportService!.getUserFriendyStageName(object.stage),
+                            // Tetsubi MD: stages the encoder doesn't know (a download) are shown as given.
+                            conversionStepName: audioExportService!.getUserFriendyStageName(object.stage) ?? object.stage,
                             total: totalTracks,
                             state: trackNumber /* starts at 0 */ + object.progress / object.total,
                         })
@@ -1569,9 +1570,19 @@ export function convertAndUpload(
                         if ((f.file as any).getForEncoding) {
                             // It's an adaptive file
                             const file = f.file as AdaptiveFile;
-                            data = await file.getForEncoding(exportParams);
-                            convertNext();
-                            resolve({ file: f, data: data });
+                            // Tetsubi MD: report progress, and stop cleanly on a failure instead of hanging.
+                            try {
+                                data = await file.getForEncoding(exportParams, updateEncodeProgressCallback.bind(null, j, files.length));
+                                totalBytesCalc += data.byteLength;
+                                convertNext();
+                                resolve({ file: f, data: data });
+                            } catch (err) {
+                                error = err;
+                                errorMessage = file.describeError?.(err) ?? `${file.name}: Unsupported or unrecognized format`;
+                                // Resolve without data: the upload loop stops there and reports the error,
+                                // rather than the whole upload being thrown away mid-way.
+                                resolve({ file: f, data: null as unknown as ArrayBuffer });
+                            }
                         } else {
                             const file = f.file as File;
                             try {
@@ -1632,6 +1643,10 @@ export function convertAndUpload(
             if (hasUploadBeenCancelled()) {
                 break;
             }
+            // Tetsubi MD: a file that couldn't be fetched or converted ends the upload here.
+            if (!item.data) {
+                break;
+            }
 
             const { file, data } = item;
 
@@ -1688,6 +1703,8 @@ export function convertAndUpload(
                     break;
                 }
             }
+            // Tetsubi MD: tell the file it is now on the disc.
+            (file.file as AdaptiveFile).onUploaded?.(halfWidthTitle || title);
         }
         await netmdService?.finalizeUpload();
         await audioExportService!.deinit();

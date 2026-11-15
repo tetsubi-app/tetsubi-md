@@ -50,7 +50,15 @@ export interface AdaptiveFile {
     album: string;
     artist: string;
     duration: number;
-    getForEncoding(encoding: AudioEncoderV1ExportParams): Promise<ArrayBuffer>;
+    // Tetsubi MD: `progress` lets the file report its own stages (such as a download) to the upload dialog.
+    getForEncoding(
+        encoding: AudioEncoderV1ExportParams,
+        progress?: (object: { stage: string; progress: number; total: number }) => void
+    ): Promise<ArrayBuffer>;
+    // Tetsubi MD: called once the file is on the disc, with the title it was given there.
+    onUploaded?(title: string): void;
+    // Tetsubi MD: a message to show if getForEncoding fails.
+    describeError?(error: unknown): string;
 }
 
 export type TitledFile = {

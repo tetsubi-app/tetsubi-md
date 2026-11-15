@@ -24,6 +24,10 @@ export interface Entry {
     artist: string;
     album: string;
     seconds: number;
+    /** Jellyfin's name for the file's format, for the download. */
+    container?: string;
+    /** Set once this song has been written to a disc: the title it was given there. */
+    writtenTitle?: string;
     /** The item and tag to ask the server for the cover with. */
     artItemId?: string;
     artTag?: string;
@@ -192,6 +196,7 @@ function entryFor(track: Track): Entry {
         artist: library.trackArtistName(track),
         album: track.Album ?? '',
         seconds: library.ticksToSeconds(track.RunTimeTicks),
+        container: track.MediaSources?.[0]?.Container,
         artItemId: ownArt ? track.Id : track.AlbumId,
         artTag: ownArt ?? track.AlbumPrimaryImageTag,
     };
@@ -278,6 +283,29 @@ export function adoptPlaylist(playlist: Playlist, allTracks: Track[]) {
     notify(`“${discName}” is now the disc list.`);
     // If duplicates were dropped, bring the playlist into line.
     flush();
+}
+
+/** Records that a song is now on the disc, under `title`. */
+export function markWritten(key: string, title: string) {
+    if (!state.entries.some((entry) => entry.key === key)) return;
+    set({ entries: state.entries.map((entry) => (entry.key === key ? { ...entry, writtenTitle: title } : entry)) });
+}
+
+/** Forgets that these songs were written, so they wait to be written again. All of them when no keys are given. */
+export function markUnwritten(keys?: string[]) {
+    set({
+        entries: state.entries.map((entry) => (entry.writtenTitle !== undefined && (!keys || keys.includes(entry.key)) ? { ...entry, writtenTitle: undefined } : entry)),
+    });
+}
+
+/**
+ * Whether a song counts as being on the disc. With a disc in the recorder,
+ * its titles decide: a song deleted there, or a different disc, makes the
+ * song wait again. With no disc to check, the record of the last write stands.
+ */
+export function isOnDisc(entry: Entry, discTitles: Set<string> | null): boolean {
+    if (entry.writtenTitle === undefined) return false;
+    return discTitles === null || discTitles.has(entry.writtenTitle);
 }
 
 export function inDiscList(trackId: string, s: DiscListState = state): boolean {

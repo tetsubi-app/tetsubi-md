@@ -4,7 +4,7 @@ Write music from your [Jellyfin](https://jellyfin.org/) server straight to a Min
 
 Tetsubi MD is a companion to [Tetsubi](https://tetsubi.app/), the Jellyfin music player. One half of the screen browses your Jellyfin library; the other half is a MiniDisc writer. Add albums and songs to the disc list, and they are saved as a Jellyfin playlist named after the disc and written to the recorder.
 
-> **Status:** early development. The MiniDisc half works as upstream does. On the Jellyfin half you can sign in (Quick Connect or username and password) browse albums, artists, playlists and search, and build a disc list that is saved as a Jellyfin playlist on every change. Writing that list to the disc comes next.
+> **Status:** early development. The MiniDisc half works as upstream does. On the Jellyfin half you can sign in (Quick Connect or username and password) browse albums, artists, playlists and search, build a disc list that is saved as a Jellyfin playlist on every change, and write that list to the disc. Writing has been tested with the mock recorder, not yet on hardware.
 
 ## Based on Web MiniDisc Pro
 
@@ -44,7 +44,8 @@ The WASM modules in `public/` are prebuilt; `extra/` explains how to rebuild the
 
 - `src/jellyfin/` — the Jellyfin client: server address, sign-in, saved session, library queries
 - `src/components/jellyfin/` — the library half of the screen: sign-in, tabs, search, album, artist and playlist pages
-- `src/disc-list/`, `src/components/disc-list/` — the songs chosen for a disc, and the queue that keeps their Jellyfin playlist in step
+- `src/disc-list/`, `src/components/disc-list/` — the songs chosen for a disc, the queue that keeps their Jellyfin playlist in step, and the hand-over of those songs to upstream's convert dialog and upload
+- the few changes inside upstream files are marked `Tetsubi MD:`
 - `src/components/tetsubi/`, `src/tetsubi/` — the frame around both halves, theme, fonts
 - everything else — Web MiniDisc Pro, changed as little as possible so upstream fixes can be merged
 

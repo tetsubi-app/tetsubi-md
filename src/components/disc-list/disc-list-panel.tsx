@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DragDropContext, Draggable, Droppable, DropResult } from '@hello-pangea/dnd';
 
 import Box from '@mui/material/Box';
@@ -13,6 +13,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import { CheckCircle as OnDiscIcon } from '@mui/icons-material';
 import { CloudDone as SavedIcon } from '@mui/icons-material';
 import { Close as RemoveIcon } from '@mui/icons-material';
 import { DragIndicator as DragIcon } from '@mui/icons-material';
@@ -25,17 +26,23 @@ import {
     Entry,
     currentPlaylistName,
     flush,
+    isOnDisc,
+    markUnwritten,
+    markWritten,
     moveEntry,
     newDiscList,
     removeEntry,
     renameDisc,
     setMode,
-    totalSeconds,
     useDiscList,
 } from '../../disc-list/store';
-import { useShallowEqualSelector } from '../../frontend-utils';
+import { adaptiveFilesFor, requestWrite } from '../../disc-list/write';
+import { useDispatch, useShallowEqualSelector } from '../../frontend-utils';
 import { durationText, imageUrl, songCountText } from '../../jellyfin/library';
 import { currentClient } from '../../jellyfin/session';
+import { renameDisc as renameDiscOnRecorder } from '../../redux/actions';
+import { actions as convertDialogActions } from '../../redux/convert-dialog-feature';
+import { Capability } from '../../services/interfaces/netmd';
 import serviceRegistry from '../../services/registry';
 import { colors } from '../../tetsubi/theme';
 import { Art } from '../jellyfin/library-parts';
@@ -113,7 +120,7 @@ const NameField = () => {
     );
 };
 
-const Row = ({ entry, index }: { entry: Entry; index: number }) => {
+const Row = ({ entry, index, onDisc }: { entry: Entry; index: number; onDisc: boolean }) => {
     const client = currentClient();
     const art = client ? imageUrl(client, entry.artItemId, entry.artTag, 96) : null;
     return (
@@ -146,7 +153,7 @@ const Row = ({ entry, index }: { entry: Entry; index: number }) => {
                         {index + 1}
                     </Typography>
                     <Art src={art} size={36} />
-                    <Box sx={{ minWidth: 0, flex: '1 1 auto' }}>
+                    <Box sx={{ minWidth: 0, flex: '1 1 auto', opacity: onDisc ? 0.6 : 1 }}>
                         <Typography noWrap sx={{ fontSize: 15 }}>
                             {entry.name}
                         </Typography>
@@ -157,6 +164,11 @@ const Row = ({ entry, index }: { entry: Entry; index: number }) => {
                     <Typography sx={{ flex: '0 0 auto', color: colors.text3, fontSize: 14, fontVariantNumeric: 'tabular-nums' }}>
                         {entry.seconds ? durationText(entry.seconds) : ''}
                     </Typography>
+                    {onDisc ? (
+                        <Tooltip title="On the disc">
+                            <OnDiscIcon aria-label="On the disc" sx={{ fontSize: 18, color: 'success.light' }} />
+                        </Tooltip>
+                    ) : null}
                     <IconButton size="small" aria-label={`Remove ${entry.name}`} onClick={() => removeEntry(entry.key)}>
                         <RemoveIcon fontSize="small" />
                     </IconButton>
@@ -169,16 +181,84 @@ const Row = ({ entry, index }: { entry: Entry; index: number }) => {
 /** The songs chosen for the disc, mirrored by a Jellyfin playlist. Shown under the recorder. */
 export const DiscListPanel = () => {
     const list = useDiscList();
-    const disc = useShallowEqualSelector((state) => state.main.disc);
+    const dispatch = useDispatch();
+    const { disc, deviceCapabilities } = useShallowEqualSelector((state) => state.main);
+    const mainView = useShallowEqualSelector((state) => state.appState.mainView);
+    const convertFormat = useShallowEqualSelector((state) => state.convertDialog.format);
+    const uploading = useShallowEqualSelector((state) => state.uploadDialog.visible);
     const [menu, setMenu] = useState<HTMLElement | null>(null);
+
+    // The disc in the recorder, if there is one to look at.
+    const connected = mainView === 'MAIN';
+    const liveDisc = connected ? disc : null;
+    const discTitles = useMemo(
+        () => (liveDisc ? new Set(liveDisc.groups.flatMap((group) => group.tracks.map((track) => track.title ?? ''))) : null),
+        [liveDisc]
+    );
+    const waiting = list.entries.filter((entry) => !isOnDisc(entry, discTitles));
+    const onDiscCount = list.entries.length - waiting.length;
+    const anyWritten = list.entries.some((entry) => entry.writtenTitle !== undefined);
+
+    // An unnamed list takes the name of the disc in the recorder.
+    const discTitle = liveDisc?.title?.trim() ?? '';
+    useEffect(() => {
+        if (list.account && !list.name && discTitle) renameDisc(discTitle);
+    }, [list.account, list.name, discTitle]);
+
+    // After a write to an untitled disc, the disc takes the list's name.
+    const wroteSome = useRef(false);
+    const wasUploading = useRef(false);
+    useEffect(() => {
+        if (wasUploading.current && !uploading && wroteSome.current) {
+            wroteSome.current = false;
+            const name = list.name.trim();
+            if (name && liveDisc && !liveDisc.title && !liveDisc.fullWidthTitle && deviceCapabilities.includes(Capability.metadataEdit)) {
+                const spec = serviceRegistry.netmdSpec;
+                dispatch(renameDiscOnRecorder({ newName: spec ? spec.sanitizeHalfWidthTitle(name) : name }));
+            }
+        }
+        wasUploading.current = uploading;
+        // Only the end of an upload matters here.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [uploading]);
 
     if (!list.account) return null;
 
     // A NetMD disc reports its free time in SP seconds; Hi-MD counts bytes, which don't map to a time.
     const timed = serviceRegistry.netmdSpec?.measurementUnits !== 'bytes';
-    const discSecondsFree = disc && timed ? disc.left : null;
-    const seconds = totalSeconds(list);
-    const fits = disc && !timed ? null : fit(seconds, list.mode, discSecondsFree);
+    const discSecondsFree = liveDisc && timed ? liveDisc.left : null;
+    const seconds = waiting.reduce((sum, entry) => sum + entry.seconds, 0);
+    const fits = liveDisc && !timed ? null : fit(seconds, list.mode, discSecondsFree);
+
+    const cannotWrite = !connected
+        ? 'Connect a recorder to write these to a disc.'
+        : !liveDisc
+          ? 'Put a disc in the recorder to write these.'
+          : !deviceCapabilities.includes(Capability.trackUpload)
+            ? "This recorder can't be written to from here."
+            : !liveDisc.writable || liveDisc.writeProtected
+              ? 'This disc is write-protected.'
+              : null;
+
+    const write = () => {
+        const client = currentClient();
+        if (!client || waiting.length === 0) return;
+        // Start the convert dialog on the mode chosen here, where the recorder has it.
+        const spec = serviceRegistry.netmdSpec;
+        const formatIndex = spec ? spec.availableFormats.findIndex((format) => format.userFriendlyName === list.mode) : -1;
+        if (spec && formatIndex >= 0) {
+            dispatch(convertDialogActions.setFormat({ ...convertFormat, [spec.specName]: [formatIndex, 0] }));
+        }
+        requestWrite(
+            adaptiveFilesFor(waiting, {
+                client,
+                onWritten: (entry, title) => {
+                    wroteSome.current = true;
+                    markWritten(entry.key, title);
+                },
+            })
+        );
+    };
 
     const onDragEnd = (result: DropResult) => {
         if (result.destination) moveEntry(result.source.index, result.destination.index);
@@ -188,7 +268,7 @@ export const DiscListPanel = () => {
         <Box component="section" aria-label="Disc list" sx={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             <Box sx={{ px: 3, pt: 2 }}>
                 <Typography sx={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: colors.text3 }}>
-                    To write
+                    Disc list
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <NameField />
@@ -206,6 +286,15 @@ export const DiscListPanel = () => {
                         >
                             Start a new disc list
                         </MenuItem>
+                        <MenuItem
+                            disabled={!anyWritten}
+                            onClick={() => {
+                                setMenu(null);
+                                markUnwritten();
+                            }}
+                        >
+                            Write everything again
+                        </MenuItem>
                     </Menu>
                 </Box>
                 {list.sync.status === 'error' ? (
@@ -222,7 +311,8 @@ export const DiscListPanel = () => {
                     <Box sx={{ mt: 1.5 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                             <Typography sx={{ flex: '1 1 auto', fontSize: 14, color: colors.text2 }}>
-                                {songCountText(list.entries.length)} · {minutesText(seconds)}
+                                {waiting.length > 0 ? `${songCountText(waiting.length)} to write · ${minutesText(seconds)}` : 'Everything is on the disc'}
+                                {onDiscCount > 0 && waiting.length > 0 ? ` · ${onDiscCount} on the disc` : ''}
                             </Typography>
                             <ToggleButtonGroup
                                 value={list.mode}
@@ -252,6 +342,14 @@ export const DiscListPanel = () => {
                                 </Typography>
                             </>
                         ) : null}
+                        {waiting.length > 0 ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1.5, mt: 1.5 }}>
+                                <Button variant="contained" disabled={!!cannotWrite || uploading} onClick={write}>
+                                    Write {songCountText(waiting.length)} to the disc
+                                </Button>
+                                {cannotWrite ? <Typography sx={{ fontSize: 13, color: colors.text3, flex: '1 1 160px' }}>{cannotWrite}</Typography> : null}
+                            </Box>
+                        ) : null}
                     </Box>
                 ) : null}
             </Box>
@@ -267,7 +365,7 @@ export const DiscListPanel = () => {
                             {(provided) => (
                                 <Box component="ol" ref={provided.innerRef} {...provided.droppableProps} sx={{ listStyle: 'none', p: 0, m: 0 }}>
                                     {list.entries.map((entry, index) => (
-                                        <Row key={entry.key} entry={entry} index={index} />
+                                        <Row key={entry.key} entry={entry} index={index} onDisc={isOnDisc(entry, discTitles)} />
                                     ))}
                                     {provided.placeholder}
                                 </Box>
