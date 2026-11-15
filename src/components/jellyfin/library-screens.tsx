@@ -1,9 +1,11 @@
 // The library's screens: the three tabs, search results, and the album,
 // artist and playlist pages.
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import MenuItem from '@mui/material/MenuItem';
@@ -11,9 +13,12 @@ import Select from '@mui/material/Select';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
+import { Favorite as HeartIcon } from '@mui/icons-material';
+import { FavoriteBorder as HeartOutlineIcon } from '@mui/icons-material';
 import { GridView as GridViewIcon } from '@mui/icons-material';
 import { ViewList as ViewListIcon } from '@mui/icons-material';
 
+import { favouritesChanged } from '../../jellyfin/favourites';
 import * as library from '../../jellyfin/library';
 import { ALBUM_SORTS, Album, AlbumSort, Artist, Playlist, Track } from '../../jellyfin/library';
 import { colors } from '../../tetsubi/theme';
@@ -27,8 +32,12 @@ export type Route =
     | { kind: 'artist'; id: string; name: string }
     | { kind: 'playlist'; id: string; name: string };
 
+export type TabName = 'home' | 'albums' | 'artists' | 'favourites' | 'playlists';
+
 export interface Navigation {
     open: (route: Route) => void;
+    /** Goes back to the top level, on this tab. */
+    showTab: (tab: TabName) => void;
 }
 
 const openAlbum = (nav: Navigation) => (album: Album) => nav.open({ kind: 'album', id: album.Id, name: album.Name });
@@ -312,7 +321,7 @@ const PageHeader = ({
                     {line}
                 </Typography>
             ))}
-            {actions ? <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>{actions}</Box> : null}
+            {actions ? <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 1.5 }}>{actions}</Box> : null}
         </Box>
     </Box>
 );
@@ -320,6 +329,41 @@ const PageHeader = ({
 function totalSeconds(tracks: Track[]): number {
     return tracks.reduce((sum, track) => sum + library.ticksToSeconds(track.RunTimeTicks), 0);
 }
+
+/** The heart on an album's page. It changes at once, and goes back if the server says no. */
+const FavouriteButton = ({ album }: { album: Album }) => {
+    const client = useClient();
+    const [favourite, setFavourite] = useState(!!album.UserData?.IsFavorite);
+    const [busy, setBusy] = useState(false);
+    const [failed, setFailed] = useState(false);
+    useEffect(() => setFavourite(!!album.UserData?.IsFavorite), [album.UserData?.IsFavorite]);
+
+    const toggle = async () => {
+        const next = !favourite;
+        setFavourite(next);
+        setBusy(true);
+        setFailed(false);
+        try {
+            await library.setFavourite(client, album.Id, next);
+            favouritesChanged();
+        } catch {
+            setFavourite(!next);
+            setFailed(true);
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    return (
+        <Tooltip title={failed ? "Couldn't change this. Try again." : favourite ? 'Remove from favourites' : 'Add to favourites'}>
+            <span>
+                <IconButton onClick={toggle} disabled={busy} aria-pressed={favourite} aria-label="Favourite" sx={{ color: favourite ? colors.pink : 'inherit' }}>
+                    {favourite ? <HeartIcon /> : <HeartOutlineIcon />}
+                </IconButton>
+            </span>
+        </Tooltip>
+    );
+};
 
 export const AlbumPage = ({ id, name }: { id: string; name: string }) => {
     const client = useClient();
@@ -337,7 +381,12 @@ export const AlbumPage = ({ id, name }: { id: string; name: string }) => {
                 art={<Art src={album ? library.albumArt(client, album, 480) : null} />}
                 title={album?.Name ?? name}
                 lines={[artist, album?.ProductionYear ? String(album.ProductionYear) : null, tracks.data ? library.summaryText(tracks.data.length, totalSeconds(tracks.data)) : null]}
-                actions={<AddAllButton tracks={tracks.data} label="Add album" />}
+                actions={
+                    <>
+                        <AddAllButton tracks={tracks.data} label="Add album" />
+                        {album ? <FavouriteButton key={album.Id} album={album} /> : null}
+                    </>
+                }
             />
             {groups.map((group) => (
                 <Box key={group.disc}>

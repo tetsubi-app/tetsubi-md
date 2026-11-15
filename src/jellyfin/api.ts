@@ -182,6 +182,10 @@ export class JellyfinClient {
         return this.request<T>('POST', path, { body, query });
     }
 
+    delete<T>(path: string, query?: Record<string, string | number | boolean | undefined>): Promise<T> {
+        return this.request<T>('DELETE', path, { query });
+    }
+
     private signedIn(response: AuthenticationResponse): AuthenticationResponse {
         this.accessToken = response.AccessToken;
         this.userId = response.User.Id;

@@ -132,3 +132,96 @@ describe('wording', () => {
         expect(library.groupByDisc([t('a'), t('b')]).length).toBe(1);
     });
 });
+
+describe('home', () => {
+    it('finds albums released on this day in earlier years, most recent first', () => {
+        const a = (Id: string, PremiereDate?: string) => ({ Id, Name: Id, PremiereDate });
+        const today = new Date(2026, 10, 15); // 15 November 2026, local time
+        const found = library.onThisDay(
+            [
+                a('old', '1976-11-15T00:00:00.0000000Z'),
+                a('recent', '2025-11-15T00:00:00.0000000Z'),
+                a('today', '2026-11-15T00:00:00.0000000Z'),
+                a('otherDay', '1990-11-16T00:00:00.0000000Z'),
+                a('lateInDay', '1999-11-15T23:30:00.0000000Z'),
+                a('noDate'),
+            ],
+            today
+        );
+        expect(found.map((f) => [f.album.Id, f.yearsAgo])).toEqual([
+            ['recent', 1],
+            ['lateInDay', 27],
+            ['old', 50],
+        ]);
+        expect(library.anniversaryText(1)).toBe('1 year ago');
+        expect(library.anniversaryText(50)).toBe('50 years ago');
+    });
+
+    it('asks for release dates only, then the details of the matches', async () => {
+        const { client, urls } = clientWith([
+            { Items: [{ Id: 'a1', Name: 'One', PremiereDate: '2000-11-15T00:00:00Z' }, { Id: 'a2', Name: 'Two', PremiereDate: '2000-03-01T00:00:00Z' }] },
+            { Items: [{ Id: 'a1', Name: 'One', AlbumArtist: 'Artist', ImageTags: { Primary: 't' } }] },
+        ]);
+        const found = await library.onThisDayAlbums(client, 12, new Date(2026, 10, 15));
+        expect(found).toEqual([{ album: { Id: 'a1', Name: 'One', AlbumArtist: 'Artist', ImageTags: { Primary: 't' } }, yearsAgo: 26 }]);
+        expect(urls[0].searchParams.get('EnableImages')).toBe('false');
+        expect(urls[1].searchParams.get('Ids')).toBe('a1');
+    });
+
+    it('asks nothing more when no album has an anniversary', async () => {
+        const { client, urls } = clientWith([{ Items: [{ Id: 'a2', Name: 'Two', PremiereDate: '2000-03-01T00:00:00Z' }] }]);
+        expect(await library.onThisDayAlbums(client, 12, new Date(2026, 10, 15))).toEqual([]);
+        expect(urls.length).toBe(1);
+    });
+
+    it('turns recently played songs into distinct albums, skipping unplayed ones', () => {
+        const t = (Id: string, AlbumId: string, Album: string, played: boolean) => ({
+            Id,
+            Name: Id,
+            AlbumId,
+            Album,
+            AlbumArtist: 'Artist',
+            AlbumPrimaryImageTag: 'tag-' + AlbumId,
+            UserData: played ? { PlayCount: 1 } : { PlayCount: 0 },
+        });
+        const albums = library.distinctPlayedAlbums(
+            [t('1', 'A', 'First', true), t('2', 'A', 'First', true), t('3', 'B', 'Second', true), t('4', 'B2', 'Second', true), t('5', 'C', 'Third', false), t('6', 'D', 'Fourth', true)],
+            3
+        );
+        expect(albums.map((a) => a.Id)).toEqual(['A', 'B', 'D']);
+        expect(albums[0]).toMatchObject({ Name: 'First', AlbumArtist: 'Artist', ImageTags: { Primary: 'tag-A' } });
+    });
+
+    it('reads recently added albums from a bare list', async () => {
+        const { client, urls } = clientWith([[{ Id: 'a1', Name: 'One' }]]);
+        expect(await library.recentlyAddedAlbums(client)).toEqual([{ Id: 'a1', Name: 'One' }]);
+        expect(urls[0].pathname).toBe('/Users/u1/Items/Latest');
+    });
+
+    it('asks for favourites and random albums', async () => {
+        const { client, urls } = clientWith([{ Items: [] }, { Items: [] }]);
+        await library.favouriteAlbums(client);
+        await library.randomAlbums(client, 12);
+        expect(urls[0].searchParams.get('Filters')).toBe('IsFavorite');
+        expect(urls[1].searchParams.get('SortBy')).toBe('Random');
+        expect(urls[1].searchParams.get('Limit')).toBe('12');
+    });
+
+    it('adds and removes a favourite', async () => {
+        const methods: string[] = [];
+        const client = new JellyfinClient({
+            serverUrl: 'https://music.example.com',
+            deviceId: 'd',
+            deviceName: 'Test',
+            accessToken: 'tok',
+            userId: 'u1',
+            fetch: (async (url: RequestInfo | URL, init?: RequestInit) => {
+                methods.push(`${init?.method} ${new URL(String(url)).pathname}${new URL(String(url)).search}`);
+                return new Response('{}', { status: 200 });
+            }) as typeof fetch,
+        });
+        await library.setFavourite(client, 'a1', true);
+        await library.setFavourite(client, 'a1', false);
+        expect(methods).toEqual(['POST /UserFavoriteItems/a1?userId=u1', 'DELETE /UserFavoriteItems/a1?userId=u1']);
+    });
+});

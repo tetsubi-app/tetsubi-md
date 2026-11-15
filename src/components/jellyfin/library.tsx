@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -17,12 +17,14 @@ import { Search as SearchIcon } from '@mui/icons-material';
 
 import { signOut, useJellyfin } from '../../jellyfin/session';
 import { useDebounced } from './library-hooks';
-import { AlbumPage, AlbumsTab, ArtistPage, ArtistsTab, Navigation, PlaylistPage, PlaylistsTab, Route, SearchResults } from './library-screens';
+import { FavouritesTab, HomeTab } from './home-screen';
+import { AlbumPage, AlbumsTab, ArtistPage, ArtistsTab, Navigation, PlaylistPage, PlaylistsTab, Route, SearchResults, TabName } from './library-screens';
 
-type TabName = 'albums' | 'artists' | 'playlists';
 const TABS: { value: TabName; label: string }[] = [
+    { value: 'home', label: 'Home' },
     { value: 'albums', label: 'Albums' },
     { value: 'artists', label: 'Artists' },
+    { value: 'favourites', label: 'Favourites' },
     { value: 'playlists', label: 'Playlists' },
 ];
 
@@ -62,13 +64,35 @@ const AccountMenu = () => {
  * underneath, so going back returns to the same place in the list.
  */
 export const Library = () => {
-    const [tab, setTab] = useState<TabName>('albums');
+    const [tab, setTabState] = useState<TabName>('home');
+    // The tabs share one scrolling area, so each tab's place in it is kept here.
+    const tabScroll = useRef<HTMLDivElement>(null);
+    const tabPositions = useRef<Partial<Record<TabName, number>>>({});
+    const currentTab = useRef(tab);
+    const setTab = useCallback((next: TabName) => {
+        if (tabScroll.current) tabPositions.current[currentTab.current] = tabScroll.current.scrollTop;
+        currentTab.current = next;
+        setTabState(next);
+    }, []);
+    useLayoutEffect(() => {
+        if (tabScroll.current) tabScroll.current.scrollTop = tabPositions.current[tab] ?? 0;
+    }, [tab]);
     const [query, setQuery] = useState('');
     const term = useDebounced(query.trim(), 300);
     const [stack, setStack] = useState<Route[]>([]);
     const route = stack[stack.length - 1];
 
-    const nav: Navigation = useMemo(() => ({ open: (next) => setStack((old) => [...old, next]) }), []);
+    const nav: Navigation = useMemo(
+        () => ({
+            open: (next) => setStack((old) => [...old, next]),
+            showTab: (next) => {
+                setStack([]);
+                setQuery('');
+                setTab(next);
+            },
+        }),
+        [setTab]
+    );
     const back = useCallback(() => setStack((old) => old.slice(0, -1)), []);
 
     // A new page starts at its top; the top level keeps its own scroll position.
@@ -115,23 +139,37 @@ export const Library = () => {
                     <AccountMenu />
                 </Box>
                 {term ? null : (
-                    <Tabs value={tab} onChange={(_, value: TabName) => setTab(value)} aria-label="Library" sx={{ px: 2, borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs
+                        value={tab}
+                        onChange={(_, value: TabName) => setTab(value)}
+                        aria-label="Library"
+                        variant="scrollable"
+                        // In a narrow window the strip scrolls sideways (swipe, or arrow keys between tabs).
+                        scrollButtons={false}
+                        sx={{ px: 1, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { minWidth: 0, px: 1.75 } }}
+                    >
                         {TABS.map((item) => (
                             <Tab key={item.value} value={item.value} label={item.label} />
                         ))}
                     </Tabs>
                 )}
-                <Box sx={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', p: 2 }}>
+                <Box ref={tabScroll} sx={{ flex: '1 1 auto', minHeight: 0, overflowY: 'auto', p: 2 }}>
                     {term ? (
                         <SearchResults term={term} nav={nav} />
                     ) : (
                         <>
                             {/* Each tab stays mounted once opened, to keep its place. */}
+                            <KeepAlive show={tab === 'home'}>
+                                <HomeTab nav={nav} />
+                            </KeepAlive>
                             <KeepAlive show={tab === 'albums'}>
                                 <AlbumsTab nav={nav} />
                             </KeepAlive>
                             <KeepAlive show={tab === 'artists'}>
                                 <ArtistsTab nav={nav} />
+                            </KeepAlive>
+                            <KeepAlive show={tab === 'favourites'}>
+                                <FavouritesTab nav={nav} />
                             </KeepAlive>
                             <KeepAlive show={tab === 'playlists'}>
                                 <PlaylistsTab nav={nav} />

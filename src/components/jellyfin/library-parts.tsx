@@ -127,7 +127,18 @@ const twoLines = {
 } as const;
 
 /** One album in a grid: cover, title, artist and year. */
-export const AlbumTile = ({ album, onOpen, showArtist = true }: { album: Album; onOpen: (album: Album) => void; showArtist?: boolean }) => {
+export const AlbumTile = ({
+    album,
+    onOpen,
+    showArtist = true,
+    caption,
+}: {
+    album: Album;
+    onOpen: (album: Album) => void;
+    showArtist?: boolean;
+    /** Shown in place of the year, such as "30 years ago". */
+    caption?: string;
+}) => {
     const client = useClient();
     const artist = albumArtistName(album);
     return (
@@ -143,7 +154,7 @@ export const AlbumTile = ({ album, onOpen, showArtist = true }: { album: Album; 
                         {artist}
                     </Typography>
                 ) : null}
-                {album.ProductionYear ? <Typography sx={{ fontSize: 13, color: colors.text3 }}>{album.ProductionYear}</Typography> : null}
+                {caption || album.ProductionYear ? <Typography sx={{ fontSize: 13, color: colors.text3 }}>{caption ?? album.ProductionYear}</Typography> : null}
             </ButtonBase>
         </Box>
     );

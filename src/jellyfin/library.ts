@@ -14,9 +14,18 @@ export interface Album {
     AlbumArtist?: string;
     AlbumArtists?: NameId[];
     ProductionYear?: number;
+    /** The release date, as "1997-11-15T00:00:00.0000000Z". */
+    PremiereDate?: string;
     ImageTags?: { Primary?: string };
     RunTimeTicks?: number;
     ChildCount?: number;
+    UserData?: UserData;
+}
+
+export interface UserData {
+    IsFavorite?: boolean;
+    PlayCount?: number;
+    LastPlayedDate?: string;
 }
 
 export interface Artist {
@@ -46,6 +55,9 @@ export interface Track {
     AlbumPrimaryImageTag?: string;
     ImageTags?: { Primary?: string };
     MediaSources?: MediaSource[];
+    ProductionYear?: number;
+    AlbumArtists?: NameId[];
+    UserData?: UserData;
     /** Set when the track was read from a playlist: its place in that playlist. */
     PlaylistItemId?: string;
 }
@@ -298,6 +310,163 @@ export function groupByDisc(tracks: Track[]): { disc: number; tracks: Track[] }[
         else groups.push({ disc, tracks: [track] });
     }
     return groups;
+}
+
+// MARK: Home
+
+/** A handful of albums picked at random. */
+export async function randomAlbums(client: JellyfinClient, limit = 12): Promise<Album[]> {
+    return page(
+        await client.get<ItemsResponse<Album>>(`Users/${userId(client)}/Items`, {
+            IncludeItemTypes: 'MusicAlbum',
+            Recursive: true,
+            SortBy: 'Random',
+            Limit: limit,
+            Fields: ALBUM_FIELDS,
+            ImageTypeLimit: 1,
+        })
+    ).items;
+}
+
+/** The albums most recently added to the library. This endpoint answers with a bare list. */
+export async function recentlyAddedAlbums(client: JellyfinClient, limit = 20): Promise<Album[]> {
+    const items = await client.get<Album[] | undefined>(`Users/${userId(client)}/Items/Latest`, {
+        IncludeItemTypes: 'MusicAlbum',
+        Limit: limit,
+        Fields: ALBUM_FIELDS,
+        ImageTypeLimit: 1,
+    });
+    return Array.isArray(items) ? items : [];
+}
+
+/** The user's favourite albums, newest additions to the library first. */
+export async function favouriteAlbums(client: JellyfinClient): Promise<Album[]> {
+    return page(
+        await client.get<ItemsResponse<Album>>('Items', {
+            UserId: userId(client),
+            Recursive: true,
+            IncludeItemTypes: 'MusicAlbum',
+            Filters: 'IsFavorite',
+            SortBy: 'DateCreated',
+            SortOrder: 'Descending',
+            Fields: ALBUM_FIELDS,
+            ImageTypeLimit: 1,
+        })
+    ).items;
+}
+
+/** Marks or unmarks an album (or any item) as a favourite. */
+export async function setFavourite(client: JellyfinClient, itemId: string, favourite: boolean): Promise<void> {
+    const path = `UserFavoriteItems/${itemId}`;
+    const query = { userId: userId(client) };
+    if (favourite) await client.post<unknown>(path, undefined, query);
+    else await client.delete<unknown>(path, query);
+}
+
+/**
+ * Recently played songs (each standing for its album) down to one entry per
+ * album, most recent first. Only songs actually played count: the server
+ * sorts never-played ones to the end rather than leaving them out.
+ */
+export function distinctPlayedAlbums(tracks: Track[], limit: number): Album[] {
+    const seenIds = new Set<string>();
+    const seenNames = new Set<string>();
+    const albums: Album[] = [];
+    for (const track of tracks) {
+        const played = (track.UserData?.PlayCount ?? 0) > 0 || !!track.UserData?.LastPlayedDate;
+        if (!played || !track.AlbumId || seenIds.has(track.AlbumId)) continue;
+        const artist = track.AlbumArtists?.map((a) => a.Name).join(', ') || track.AlbumArtist || '';
+        // Once per album name and artist too: a re-added album can have two IDs.
+        const nameKey = `${track.Album ?? ''}|${artist}`;
+        if (seenNames.has(nameKey)) continue;
+        seenIds.add(track.AlbumId);
+        seenNames.add(nameKey);
+        albums.push({
+            Id: track.AlbumId,
+            Name: track.Album ?? track.Name,
+            AlbumArtist: track.AlbumArtist,
+            AlbumArtists: track.AlbumArtists,
+            ProductionYear: track.ProductionYear,
+            ImageTags: { Primary: track.AlbumPrimaryImageTag },
+        });
+        if (albums.length >= limit) break;
+    }
+    return albums;
+}
+
+/** The albums the user played most recently. */
+export async function recentlyPlayedAlbums(client: JellyfinClient, limit = 12): Promise<Album[]> {
+    const { items } = page(
+        await client.get<ItemsResponse<Track>>(`Users/${userId(client)}/Items`, {
+            Recursive: true,
+            IncludeItemTypes: 'Audio',
+            SortBy: 'DatePlayed',
+            SortOrder: 'Descending',
+            // More songs than albums wanted, so there are enough distinct albums among them.
+            Limit: Math.max(limit * 20, 200),
+            Fields: 'AlbumArtists,ProductionYear',
+            EnableUserData: true,
+            ImageTypeLimit: 1,
+        })
+    );
+    return distinctPlayedAlbums(items, limit);
+}
+
+export interface Anniversary {
+    album: Album;
+    yearsAgo: number;
+}
+
+/**
+ * Albums released on today's month and day in an earlier year, the most
+ * recent first. The date is read straight from the server's text, so the
+ * time zone can't move it to a neighbouring day.
+ */
+export function onThisDay(albums: Album[], today: Date = new Date()): Anniversary[] {
+    const two = (n: number) => String(n).padStart(2, '0');
+    const monthDay = `${two(today.getMonth() + 1)}-${two(today.getDate())}`;
+    const matches: Anniversary[] = [];
+    for (const item of albums) {
+        const match = item.PremiereDate?.match(/^(\d{4})-(\d{2}-\d{2})/);
+        if (!match || match[2] !== monthDay) continue;
+        const yearsAgo = today.getFullYear() - Number(match[1]);
+        if (yearsAgo > 0) matches.push({ album: item, yearsAgo });
+    }
+    return matches.sort((a, b) => a.yearsAgo - b.yearsAgo);
+}
+
+/** "30 years ago", "1 year ago". */
+export function anniversaryText(yearsAgo: number): string {
+    return yearsAgo === 1 ? '1 year ago' : `${yearsAgo} years ago`;
+}
+
+/**
+ * Today's anniversaries. First every album's release date and nothing else
+ * (small, even for a big library), then the full details of the few matches.
+ */
+export async function onThisDayAlbums(client: JellyfinClient, limit = 12, today: Date = new Date()): Promise<Anniversary[]> {
+    const user = userId(client);
+    const dates = page(
+        await client.get<ItemsResponse<Album>>(`Users/${user}/Items`, {
+            IncludeItemTypes: 'MusicAlbum',
+            Recursive: true,
+            Fields: 'ProductionYear,PremiereDate',
+            EnableImages: false,
+            EnableUserData: false,
+            EnableTotalRecordCount: false,
+        })
+    ).items;
+    const matches = onThisDay(dates, today).slice(0, limit);
+    if (matches.length === 0) return [];
+    const full = page(
+        await client.get<ItemsResponse<Album>>(`Users/${user}/Items`, {
+            Ids: matches.map((m) => m.album.Id).join(','),
+            Fields: ALBUM_FIELDS,
+            ImageTypeLimit: 1,
+        })
+    ).items;
+    const byId = new Map(full.map((item) => [item.Id, item]));
+    return matches.map((m) => ({ album: byId.get(m.album.Id) ?? m.album, yearsAgo: m.yearsAgo }));
 }
 
 // MARK: Changing playlists

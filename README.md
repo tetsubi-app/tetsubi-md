@@ -43,7 +43,7 @@ The WASM modules in `public/` are prebuilt; `extra/` explains how to rebuild the
 ## Layout of the code
 
 - `src/jellyfin/` — the Jellyfin client: server address, sign-in, saved session, library queries
-- `src/components/jellyfin/` — the library half of the screen: sign-in, tabs, search, album, artist and playlist pages
+- `src/components/jellyfin/` — the library half of the screen: sign-in, Home, tabs, search, album, artist and playlist pages
 - `src/disc-list/`, `src/components/disc-list/` — the songs chosen for a disc, the queue that keeps their Jellyfin playlist in step, and the hand-over of those songs to upstream's convert dialog and upload
 - the few changes inside upstream files are marked `Tetsubi MD:`
 - `src/components/tetsubi/`, `src/tetsubi/` — the frame around both halves, theme, fonts
