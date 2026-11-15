@@ -561,12 +561,12 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             <ListItemText>
                 <Link
                     rel="noopener noreferrer"
-                    href="https://github.com/asivery/webminidisc"
+                    href="https://github.com/tetsubi-app/tetsubi-md"
                     target="_blank"
                     ref={githubLinkRef}
                     onClick={handleGithubLink}
                 >
-                    Fork me on GitHub
+                    Source on GitHub
                 </Link>
             </ListItemText>
         </MenuItem>

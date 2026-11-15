@@ -38,3 +38,7 @@ src/version-info.ts
 
 **/*.wme
 public/encoders.json
+
+# Claude working files (plans, notes, scratch)
+.claude/
+.scratch/

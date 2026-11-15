@@ -103,7 +103,7 @@ export const W95App = () => {
                 <Window className={classes.window}>
                     <WindowHeader style={{ display: 'flex', alignItems: 'center' }}>
                         <img alt="CD Player" src={CDPlayerIconUrl} />
-                        <span style={{ flex: '1 1 auto', marginLeft: '4px' }}>Web MiniDisc Pro</span>
+                        <span style={{ flex: '1 1 auto', marginLeft: '4px' }}>Tetsubi MD</span>
                         {mainView === 'MAIN' ? (
                             <Button onClick={handleExit}>
                                 <WindowCloseIcon />

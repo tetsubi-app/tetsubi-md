@@ -74,7 +74,7 @@ export const FactoryModeNoticeDialog = (props: {}) => {
                     {`\n`}- If the track download is stuck on 'Seeking...' it means the track is corrupted. If you are sure the track is
                     valid and can be played on the unit, please report it as a bug.
                     {`\n`}- This mode is still very unstable. If you find any bugs, please report them by creating an issue on
-                    <Link href="https://github.com/asivery/webminidisc"> this project's github page</Link> or by messaging the developers on
+                    <Link href="https://github.com/tetsubi-app/tetsubi-md"> this project's github page</Link> or by messaging the developers on
                     the <Link href="https://minidisc.wiki/discord">Minidisc.wiki Discord server</Link>.{`\n\n`}
                     To download a track via USB:
                     {`\n`}- Select the 'Position Sector' tab.

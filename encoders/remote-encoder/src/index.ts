@@ -8,7 +8,7 @@ export default class RemoteAtracExportService implements AudioEncoderV1Instance 
             userFriendlyName: 'Server Address',
             varName: 'address',
             type: 'string',
-            defaultValue: 'https://atrac.minidisc.wiki/',
+            defaultValue: '',
             validator: (content: string) => {
                 try {
                     new URL(content);

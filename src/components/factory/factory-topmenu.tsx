@@ -359,7 +359,7 @@ export const FactoryTopMenu = function(props: { onClick?: () => void }) {
             <ListItemText>
                 <Link
                     rel="noopener noreferrer"
-                    href="https://github.com/asivery/webminidisc"
+                    href="https://github.com/tetsubi-app/tetsubi-md"
                     target="_blank"
                     ref={githubLinkRef}
                     onClick={handleGithubLink}

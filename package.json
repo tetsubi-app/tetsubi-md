@@ -1,27 +1,28 @@
 {
-  "name": "webminidisc-pro",
+  "name": "tetsubi-md",
   "private": true,
   "version": "1.6.2",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/asivery/webminidisc.git"
+    "url": "git+https://github.com/tetsubi-app/tetsubi-md.git"
   },
-  "author": "asivery",
+  "author": "DEKIRU Ltd, based on Web MiniDisc Pro by asivery and Web MiniDisc by Stefano Brilli",
   "license": "GPL-2.0",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/asivery/webminidisc/issues"
+    "url": "https://github.com/tetsubi-app/tetsubi-md/issues"
   },
-  "homepage": "https://web.minidisc.wiki/",
+  "homepage": "https://tetsubi.app/minidisc/",
   "scripts": {
     "start": "npm run dev",
     "dev": "npm run update-version && vite",
     "build-noencoders": "npm run update-version && tsc && vite build",
     "build": "npm run build-noencoders && npm run postbuild-default-encoders",
+    "build:site": "PUBLIC_URL=/minidisc/ npm run build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "analyze": "source-map-explorer 'dist/assets/*.js'",
-    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify master)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
+    "update-version": "bash -c \"printf \\\"// This file has been auto-generated. Please do not modify.\\nexport const GIT_HASH = '$(git rev-parse --short --verify HEAD)';\\nexport const GIT_DIFF = '$(git diff | wc -l)';\\nexport const BUILD_DATE = '$(date)';\\n\\\" > src/version-info.ts\"",
     "pretty": "prettier src/**/*.{ts,tsx} --write",
     "package-external-encoder": "cd extra/sar-packager && bash ../../scripts/package-external-encoder.sh",
     "build-sar-packager": "cd extra/sar-packager && npm i && npm run build",
@@ -82,7 +83,6 @@
     "source-map-explorer": "^2.5.3",
     "typescript": "^5.9.3",
     "vite": "^8.3.5",
-    "vite-plugin-node-polyfills": "^0.28.0",
-    "vite-plugin-pwa": "^2.0.0"
+    "vite-plugin-node-polyfills": "^0.28.0"
   }
 }

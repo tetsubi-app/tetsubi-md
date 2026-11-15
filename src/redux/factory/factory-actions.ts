@@ -444,7 +444,7 @@ export function enterHiMDUnrestrictedMode() {
     return async function(dispatch: AppDispatch, getState: () => RootState) {
         if (
             !window.confirm(
-                'Warning: To enable the unrestricted mode the device will be temporarily exploited by running non-Sony code on them. The developers of Web Minidisc Pro aren\'t responsible for damaged devices. Do you want to continue?'
+                'Warning: To enable the unrestricted mode the device will be temporarily exploited by running non-Sony code on them. The developers of Tetsubi MD aren\'t responsible for damaged devices. Do you want to continue?'
             )
         ) {
             return;

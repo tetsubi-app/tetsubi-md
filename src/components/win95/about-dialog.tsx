@@ -12,13 +12,17 @@ export const W95AboutDialog = (props: { visible: boolean; handleClose: () => voi
         <DialogOverlay>
             <DialogWindow>
                 <WindowHeader style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ flex: '1 1 auto' }}>About Web MiniDisc Pro</span>
+                    <span style={{ flex: '1 1 auto' }}>About Tetsubi MD</span>
                     <Button onClick={props.handleClose}>
                         <WindowCloseIcon />
                     </Button>
                 </WindowHeader>
                 <DialogWindowContent>
-                    Web MiniDisc Pro uses
+                    Tetsubi MD is based on Web MiniDisc Pro by asivery and contributors, itself a fork of Web MiniDisc by Stefano
+                    Brilli, and is released under the same licence, GPL-2.0.
+                    <br />
+                    <br />
+                    Tetsubi MD uses
                     <ul>
                         <li>
                             <Anchor rel="noopener noreferrer" href="https://www.ffmpeg.org/" target="_blank">

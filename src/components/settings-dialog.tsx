@@ -346,10 +346,10 @@ export const SettingsDialog = (props: {}) => {
                         <MenuItem value="system">Device Theme</MenuItem>
                     </Select>
                 </SimpleField>
-                <SimpleField name="Stretch Web Minidisc Pro to fill the screen vertically" classes={classes} formControl={true}>
+                <SimpleField name="Stretch Tetsubi MD to fill the screen vertically" classes={classes} formControl={true}>
                     <Switch checked={pageFullHeight} onChange={handlePageFullHeightChange} />
                 </SimpleField>
-                <SimpleField name="Stretch Web Minidisc Pro to fill the screen horizontally" classes={classes} formControl={true}>
+                <SimpleField name="Stretch Tetsubi MD to fill the screen horizontally" classes={classes} formControl={true}>
                     <Switch checked={pageFullWidth} onChange={handlePageFullWidthChange} />
                 </SimpleField>
                 <NativeFields classes={classes} section="Appearance" />

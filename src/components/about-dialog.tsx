@@ -45,9 +45,21 @@ export const AboutDialog = (props: {}) => {
             TransitionComponent={Transition as any}
             aria-labelledby="about-dialog-slide-title"
         >
-            <DialogTitle id="about-dialog-slide-title">About Web MiniDisc Pro</DialogTitle>
+            <DialogTitle id="about-dialog-slide-title">About Tetsubi MD</DialogTitle>
             <DialogContent>
-                <DialogContentText>Web MiniDisc Pro uses</DialogContentText>
+                <DialogContentText>
+                    Tetsubi MD is based on{' '}
+                    <Link rel="noopener noreferrer" href="https://github.com/asivery/webminidisc" target="_blank">
+                        Web MiniDisc Pro
+                    </Link>{' '}
+                    by asivery and contributors, itself a fork of{' '}
+                    <Link rel="noopener noreferrer" href="https://github.com/cybercase/webminidisc" target="_blank">
+                        Web MiniDisc
+                    </Link>{' '}
+                    by Stefano Brilli. Everything that talks to the recorder is their work. Tetsubi MD adds the Jellyfin library and is
+                    released under the same licence, GPL-2.0.
+                </DialogContentText>
+                <DialogContentText style={{ marginTop: 16 }}>Tetsubi MD uses</DialogContentText>
                 <ul>
                     <li>
                         <Link rel="noopener noreferrer" href="https://www.ffmpeg.org/" target="_blank">
@@ -127,6 +139,7 @@ export const AboutDialog = (props: {}) => {
                         </Link>
                     </li>
                 </ul>
+                <DialogContentText style={{ textAlign: 'center' }}>Support the author of Web MiniDisc Pro:</DialogContentText>
                 <Link target="_blank" href="https://ko-fi.com/asivery" style={{ display: 'block', textAlign: 'center' }}>
                     <img src="kofi.png" style={{ width: '50%' }} />
                 </Link>
