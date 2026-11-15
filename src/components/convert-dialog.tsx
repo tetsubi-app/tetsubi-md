@@ -955,7 +955,13 @@ export const ConvertDialog = (props: { files: (File | AdaptiveFile)[] }) => {
                                     Track title
                                 </Typography>
                                 <FormControl className={classes.titleFormControl}>
-                                    <Select value={titleFormat} color="secondary" input={<Input />} onChange={handleChangeTitleFormat}>
+                                    <Select
+                                        value={titleFormat}
+                                        color="secondary"
+                                        input={<Input />}
+                                        SelectDisplayProps={{ 'aria-label': 'Track title' }}
+                                        onChange={handleChangeTitleFormat}
+                                    >
                                         <MenuItem value={`filename`}>Filename</MenuItem>
                                         <MenuItem value={`title`}>Title</MenuItem>
                                         <MenuItem value={`album-title`}>Album - Title</MenuItem>

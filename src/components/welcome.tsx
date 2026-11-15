@@ -269,7 +269,7 @@ export const Welcome = (props: {}) => {
                 ) : (
                     <React.Fragment>
                         <Typography component="h2" variant="subtitle1" align="center" className={classes.spacing}>
-                            This Web browser is not supported.&nbsp;
+                            This browser can't talk to a MiniDisc recorder.&nbsp;
                             <Link rel="noopener noreferrer" href="#" onClick={handleLearnWhy}>
                                 Learn Why
                             </Link>
@@ -280,11 +280,11 @@ export const Welcome = (props: {}) => {
                         </Link>
 
                         <Typography component="h2" variant="subtitle1" align="center" className={classes.spacing}>
-                            Try using{' '}
+                            To write to a disc, open this page in{' '}
                             <Link rel="noopener noreferrer" target="_blank" href="https://www.google.com/chrome/">
                                 Chrome
                             </Link>{' '}
-                            instead
+                            or Edge. You can still browse your library and build a disc list here.
                         </Typography>
 
                         <Typography component="p" variant="subtitle1" align="center" className={classes.spacing}>

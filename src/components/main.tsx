@@ -626,6 +626,7 @@ export const Main = (props: {}) => {
                         <div className={classes.spacing} />
                         <LinearProgress
                             variant="determinate"
+                            aria-label="Disc space used"
                             color={((disc.total - disc.left) * 100) / disc.total >= 90 ? 'secondary' : 'primary'}
                             value={((disc.total - disc.left) * 100) / disc.total}
                         />

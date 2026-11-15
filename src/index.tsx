@@ -27,9 +27,8 @@ Object.defineProperty(window, 'wmdVersion', {
 
 const originalApplicationTitle = document.title;
 
-if (localStorage.getItem('version') !== (window as any).wmdVersion) {
-    store.dispatch(appActions.showChangelogDialog(true));
-}
+// Tetsubi MD: upstream opens its changelog on a first visit and after each
+// update. That list is Web MiniDisc Pro's, so here it only opens from the menu.
 
 (function setupEventHandlers() {
     window.addEventListener('beforeunload', (ev) => {

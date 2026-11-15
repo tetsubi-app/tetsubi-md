@@ -80,8 +80,9 @@ export const tetsubiTheme = createTheme({
         },
         MuiButton: {
             styleOverrides: {
+                // A shade darker than the brand pink and blue, so white text on it is readable throughout (4.5:1).
                 containedPrimary: {
-                    backgroundImage: `linear-gradient(100deg, ${colors.pink}, ${colors.blue})`,
+                    backgroundImage: 'linear-gradient(100deg, #9648b0, #0279a8)',
                     '&.Mui-disabled': { backgroundImage: 'none' },
                 },
             },

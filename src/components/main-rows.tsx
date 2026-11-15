@@ -71,7 +71,8 @@ const useStyles = makeStyles<
         borderRadius: '10px',
         flexDirection: 'row',
         justifyContent: 'center',
-        backgroundColor: theme.palette.primary.main,
+        // Tetsubi MD: the darker shade, so the white label is readable on it.
+        backgroundColor: theme.palette.primary.dark,
         position: 'static',
         display: 'inline-flex',
         border: `2px solid ${theme.palette.background.paper}`,
@@ -253,7 +254,13 @@ export function TrackRow({
                 [classes.currentTrackRow]: isPlayingOrPaused,
             })}
         >
-            <TableCell className={classes.dragHandle} {...draggableProvided.dragHandleProps} onClick={(event) => event.stopPropagation()}>
+            <TableCell
+                className={classes.dragHandle}
+                {...draggableProvided.dragHandleProps}
+                // Tetsubi MD: a name for screen readers.
+                aria-label={`Move ${track.title || track.fullWidthTitle || `track ${track.index + 1}`}`}
+                onClick={(event) => event.stopPropagation()}
+            >
                 <DragIndicator fontSize="small" color="disabled" />
             </TableCell>
             <TableCell className={classes.indexCell}>

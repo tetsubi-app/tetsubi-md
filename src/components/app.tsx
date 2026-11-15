@@ -59,7 +59,7 @@ const useStyles = makeStyles()((theme) => ({
         overflowY: 'auto',
     },
     paperWithDisc: {
-        flex: '1.2 1 0',
+        flex: '1.5 1 0',
         minHeight: 340,
     },
     copyrightTypography: {

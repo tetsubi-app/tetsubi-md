@@ -525,7 +525,7 @@ export const TopMenu = function (props: { tracksSelected?: number[]; onClick?: (
             <ListItemIcon className={classes.listItemIcon}>
                 <InfoIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Changelog</ListItemText>
+            <ListItemText>Web MiniDisc Pro changelog</ListItemText>
         </MenuItem>
     );
     menuItems.push(

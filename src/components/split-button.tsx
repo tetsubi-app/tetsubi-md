@@ -57,7 +57,7 @@ export default function SplitButton(props: SplitButtonProps) {
 
     return (
         <div className={boxClassName}>
-            <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button" disabled={loading}>
+            <ButtonGroup variant="contained" ref={anchorRef} aria-label="Connect" disabled={loading}>
                 <Button {...buttonProps} onClick={options[selectedIndex].handler} style={{ minWidth: width ? width * 0.8 : undefined }}>
                     {loading ? <CircularProgress style={{ width: 24, height: 24 }} /> : options[selectedIndex].name}
                 </Button>
@@ -65,12 +65,13 @@ export default function SplitButton(props: SplitButtonProps) {
                     size="small"
                     aria-controls={open ? 'split-button-menu' : undefined}
                     aria-expanded={open ? 'true' : undefined}
-                    aria-label="select merge strategy"
+                    aria-label="More ways to connect"
                     aria-haspopup="menu"
                     onClick={handleToggle}
-                    style={{ minWidth: width ? width * 0.2 : undefined, background: '#e0e0e0' }}
+                    style={{ minWidth: width ? width * 0.2 : undefined }}
                 >
-                    <ArrowDropDownIcon htmlColor="#000" />
+                    {/* Tetsubi MD: same colours as the button beside it. */}
+                    <ArrowDropDownIcon />
                 </Button>
             </ButtonGroup>
             <Popper
