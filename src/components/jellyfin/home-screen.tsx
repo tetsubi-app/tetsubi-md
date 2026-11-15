@@ -54,8 +54,8 @@ const RowPlaceholder = () => (
         {Array.from({ length: 6 }, (_, index) => (
             <Box key={index} sx={{ flex: `0 0 ${CARD}px` }}>
                 <Skeleton variant="rounded" width={CARD} height={CARD} sx={{ borderRadius: '10px' }} />
-                <Skeleton width="80%" sx={{ mt: 1 }} />
-                <Skeleton width="55%" />
+                <Skeleton width="80%" sx={{ mt: 1, mx: 'auto' }} />
+                <Skeleton width="55%" sx={{ mx: 'auto' }} />
             </Box>
         ))}
     </Box>
@@ -97,7 +97,7 @@ const PlaylistCard = ({ playlist, nav }: { playlist: Playlist; nav: Navigation }
         <Box component="li" sx={{ minWidth: 0 }}>
             <ButtonBase
                 onClick={() => nav.open({ kind: 'playlist', id: playlist.Id, name: playlist.Name })}
-                sx={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: '10px', '&:hover img': { opacity: 0.85 } }}
+                sx={{ display: 'block', width: '100%', textAlign: 'center', borderRadius: '10px', '&:hover img': { opacity: 0.85 } }}
             >
                 <Art src={library.albumArt(client, playlist, 360)} kind="playlist" />
                 <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25, mt: 1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

@@ -145,7 +145,7 @@ export const AlbumTile = ({
         <Box component="li" sx={{ minWidth: 0 }}>
             <ButtonBase
                 onClick={() => onOpen(album)}
-                sx={{ display: 'block', width: '100%', textAlign: 'left', borderRadius: '10px', '&:hover img': { opacity: 0.85 } }}
+                sx={{ display: 'block', width: '100%', textAlign: 'center', borderRadius: '10px', '&:hover img': { opacity: 0.85 } }}
             >
                 <Art src={albumArt(client, album, 360)} />
                 <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25, mt: 1, ...twoLines }}>{album.Name}</Typography>

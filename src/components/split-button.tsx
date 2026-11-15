@@ -27,6 +27,15 @@ export type SplitButtonProps = {
     loading?: boolean;
 } & ButtonProps;
 
+// Tetsubi MD: one solid colour across both halves, rather than the gradient
+// other main buttons have (it would repeat in each half). The darker blue
+// keeps the white label readable.
+const solidSx = {
+    backgroundImage: 'none',
+    backgroundColor: 'primary.dark',
+    '&:hover': { backgroundImage: 'none', backgroundColor: '#02678d' },
+} as const;
+
 export default function SplitButton(props: SplitButtonProps) {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef<HTMLDivElement>(null);
@@ -58,7 +67,7 @@ export default function SplitButton(props: SplitButtonProps) {
     return (
         <div className={boxClassName}>
             <ButtonGroup variant="contained" ref={anchorRef} aria-label="Connect" disabled={loading}>
-                <Button {...buttonProps} onClick={options[selectedIndex].handler} style={{ minWidth: width ? width * 0.8 : undefined }}>
+                <Button {...buttonProps} sx={solidSx} onClick={options[selectedIndex].handler} style={{ minWidth: width ? width * 0.8 : undefined }}>
                     {loading ? <CircularProgress style={{ width: 24, height: 24 }} /> : options[selectedIndex].name}
                 </Button>
                 <Button
@@ -68,6 +77,7 @@ export default function SplitButton(props: SplitButtonProps) {
                     aria-label="More ways to connect"
                     aria-haspopup="menu"
                     onClick={handleToggle}
+                    sx={solidSx}
                     style={{ minWidth: width ? width * 0.2 : undefined }}
                 >
                     {/* Tetsubi MD: same colours as the button beside it. */}
