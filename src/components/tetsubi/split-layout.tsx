@@ -41,7 +41,8 @@ const panelSx = {
     backgroundColor: colors.box,
     border: `1px solid ${colors.line}`,
     borderRadius: '16px',
-    backdropFilter: 'blur(8px)',
+    // No backdrop blur here: it would make this box the anchor for fixed-position
+    // children, which throws off rows while they're being dragged.
 } as const;
 
 /**
@@ -112,83 +113,86 @@ export const SplitLayout = ({ library, minidisc }: { library: React.ReactNode; m
             </Box>
 
             {narrow ? (
-                <>
-                    <Tabs value={tab} onChange={changeTab} variant="fullWidth" aria-label="Sections" sx={{ flex: '0 0 auto', px: 1.5 }}>
-                        <Tab value="library" label="Library" id="tab-library" aria-controls="panel-library" />
-                        <Tab value="minidisc" label="MiniDisc" id="tab-minidisc" aria-controls="panel-minidisc" />
-                    </Tabs>
-                    {/* Both stay mounted, so a write in progress or a sign-in isn't lost by switching. */}
-                    <Box
-                        role="tabpanel"
-                        id="panel-library"
-                        aria-labelledby="tab-library"
-                        hidden={tab !== 'library'}
-                        sx={{ ...panelSx, flex: '1 1 auto', m: 1.5, display: tab === 'library' ? 'block' : 'none' }}
-                    >
-                        {library}
-                    </Box>
-                    <Box
-                        role="tabpanel"
-                        id="panel-minidisc"
-                        aria-labelledby="tab-minidisc"
-                        hidden={tab !== 'minidisc'}
-                        sx={{ ...panelSx, flex: '1 1 auto', m: 1.5, display: tab === 'minidisc' ? 'block' : 'none' }}
-                    >
-                        {minidisc}
-                    </Box>
-                </>
-            ) : (
+                <Tabs value={tab} onChange={changeTab} variant="fullWidth" aria-label="Sections" sx={{ flex: '0 0 auto', px: 1.5 }}>
+                    <Tab value="library" label="Library" id="tab-library" aria-controls="panel-library" />
+                    <Tab value="minidisc" label="MiniDisc" id="tab-minidisc" aria-controls="panel-minidisc" />
+                </Tabs>
+            ) : null}
+
+            {/*
+              One tree for both layouts, so resizing the window across the
+              breakpoint never remounts a half (which would lose a sign-in in
+              progress, the place in the library, or a write to the disc).
+              When narrow, the half that isn't chosen is only hidden.
+            */}
+            <Box
+                ref={row}
+                sx={{
+                    flex: '1 1 auto',
+                    minHeight: 0,
+                    display: 'flex',
+                    p: 1.5,
+                    userSelect: dragging ? 'none' : undefined,
+                    cursor: dragging ? 'col-resize' : undefined,
+                }}
+            >
                 <Box
-                    ref={row}
+                    component="section"
+                    id="panel-library"
+                    role={narrow ? 'tabpanel' : undefined}
+                    aria-label={narrow ? undefined : 'Jellyfin library'}
+                    aria-labelledby={narrow ? 'tab-library' : undefined}
                     sx={{
-                        flex: '1 1 auto',
-                        minHeight: 0,
-                        display: 'flex',
-                        p: 1.5,
-                        userSelect: dragging ? 'none' : undefined,
-                        cursor: dragging ? 'col-resize' : undefined,
+                        ...panelSx,
+                        flex: narrow ? '1 1 0' : `0 0 calc(${ratio * 100}% - 8px)`,
+                        display: narrow && tab !== 'library' ? 'none' : 'block',
                     }}
                 >
-                    <Box component="section" aria-label="Jellyfin library" sx={{ ...panelSx, flex: `0 0 calc(${ratio * 100}% - 8px)` }}>
-                        {library}
-                    </Box>
-                    <Box
-                        role="separator"
-                        aria-orientation="vertical"
-                        aria-label="Resize the two halves"
-                        aria-valuemin={Math.round(MIN_RATIO * 100)}
-                        aria-valuemax={Math.round(MAX_RATIO * 100)}
-                        aria-valuenow={Math.round(ratio * 100)}
-                        tabIndex={0}
-                        onPointerDown={(event) => {
-                            event.preventDefault();
-                            setDragging(true);
-                        }}
-                        onDoubleClick={() => changeRatio(0.5)}
-                        onKeyDown={onDividerKey}
-                        sx={{
-                            flex: '0 0 16px',
-                            cursor: 'col-resize',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            touchAction: 'none',
-                            '&::after': {
-                                content: '""',
-                                width: 4,
-                                height: 48,
-                                borderRadius: 2,
-                                backgroundColor: dragging ? colors.blue : 'rgba(255, 255, 255, 0.25)',
-                                transition: 'background-color 0.15s',
-                            },
-                            '&:hover::after, &:focus-visible::after': { backgroundColor: colors.blue },
-                        }}
-                    />
-                    <Box component="section" aria-label="MiniDisc" sx={{ ...panelSx, flex: '1 1 0' }}>
-                        {minidisc}
-                    </Box>
+                    {library}
                 </Box>
-            )}
+                <Box
+                    role="separator"
+                    aria-orientation="vertical"
+                    aria-label="Resize the two halves"
+                    aria-valuemin={Math.round(MIN_RATIO * 100)}
+                    aria-valuemax={Math.round(MAX_RATIO * 100)}
+                    aria-valuenow={Math.round(ratio * 100)}
+                    tabIndex={0}
+                    onPointerDown={(event) => {
+                        event.preventDefault();
+                        setDragging(true);
+                    }}
+                    onDoubleClick={() => changeRatio(0.5)}
+                    onKeyDown={onDividerKey}
+                    sx={{
+                        flex: '0 0 16px',
+                        cursor: 'col-resize',
+                        display: narrow ? 'none' : 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        touchAction: 'none',
+                        '&::after': {
+                            content: '""',
+                            width: 4,
+                            height: 48,
+                            borderRadius: 2,
+                            backgroundColor: dragging ? colors.blue : 'rgba(255, 255, 255, 0.25)',
+                            transition: 'background-color 0.15s',
+                        },
+                        '&:hover::after, &:focus-visible::after': { backgroundColor: colors.blue },
+                    }}
+                />
+                <Box
+                    component="section"
+                    id="panel-minidisc"
+                    role={narrow ? 'tabpanel' : undefined}
+                    aria-label={narrow ? undefined : 'MiniDisc'}
+                    aria-labelledby={narrow ? 'tab-minidisc' : undefined}
+                    sx={{ ...panelSx, flex: '1 1 0', display: narrow && tab !== 'minidisc' ? 'none' : 'block' }}
+                >
+                    {minidisc}
+                </Box>
+            </Box>
         </Box>
     );
 };

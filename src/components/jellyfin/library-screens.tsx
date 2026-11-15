@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
@@ -17,6 +18,8 @@ import * as library from '../../jellyfin/library';
 import { ALBUM_SORTS, Album, AlbumSort, Artist, Playlist, Track } from '../../jellyfin/library';
 import { colors } from '../../tetsubi/theme';
 import { useClient, useLoad, usePaged, useWhenVisible } from './library-hooks';
+import { adoptPlaylist, useDiscList } from '../../disc-list/store';
+import { AddAllButton, AddTrackButton } from './add-buttons';
 import { AlbumRow, AlbumTile, Art, SectionTitle, Status, TrackRow, listSx, tileGridSx } from './library-parts';
 
 export type Route =
@@ -266,7 +269,7 @@ export const SearchResults = ({ term, nav }: { term: string; nav: Navigation }) 
                     <SectionTitle>Songs</SectionTitle>
                     <Box component="ul" sx={listSx}>
                         {data.tracks.map((track) => (
-                            <TrackRow key={track.Id} track={track} art={library.trackArt(client, track, 96)} showArtist />
+                            <TrackRow key={track.Id} track={track} art={library.trackArt(client, track, 96)} showArtist trailing={<AddTrackButton track={track} />} />
                         ))}
                     </Box>
                 </>
@@ -287,7 +290,17 @@ export const SearchResults = ({ term, nav }: { term: string; nav: Navigation }) 
 
 // MARK: Pages
 
-const PageHeader = ({ art, title, lines }: { art: React.ReactNode; title: string; lines: (string | null | undefined)[] }) => (
+const PageHeader = ({
+    art,
+    title,
+    lines,
+    actions,
+}: {
+    art: React.ReactNode;
+    title: string;
+    lines: (string | null | undefined)[];
+    actions?: React.ReactNode;
+}) => (
     <Box sx={{ display: 'flex', gap: 2.5, alignItems: 'flex-end', mb: 2.5, flexWrap: 'wrap' }}>
         <Box sx={{ flex: '0 0 auto', width: 'min(180px, 40%)', boxShadow: '0 12px 32px rgba(0, 0, 0, 0.45)', borderRadius: '10px' }}>{art}</Box>
         <Box sx={{ minWidth: 0, flex: '1 1 180px' }}>
@@ -299,6 +312,7 @@ const PageHeader = ({ art, title, lines }: { art: React.ReactNode; title: string
                     {line}
                 </Typography>
             ))}
+            {actions ? <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1.5 }}>{actions}</Box> : null}
         </Box>
     </Box>
 );
@@ -323,13 +337,20 @@ export const AlbumPage = ({ id, name }: { id: string; name: string }) => {
                 art={<Art src={album ? library.albumArt(client, album, 480) : null} />}
                 title={album?.Name ?? name}
                 lines={[artist, album?.ProductionYear ? String(album.ProductionYear) : null, tracks.data ? library.summaryText(tracks.data.length, totalSeconds(tracks.data)) : null]}
+                actions={<AddAllButton tracks={tracks.data} label="Add album" />}
             />
             {groups.map((group) => (
                 <Box key={group.disc}>
                     {groups.length > 1 ? <SectionTitle>Disc {group.disc}</SectionTitle> : null}
                     <Box component="ol" sx={listSx}>
                         {group.tracks.map((track, index) => (
-                            <TrackRow key={track.Id} track={track} number={track.IndexNumber ?? index + 1} showArtist={showArtists} />
+                            <TrackRow
+                                key={track.Id}
+                                track={track}
+                                number={track.IndexNumber ?? index + 1}
+                                showArtist={showArtists}
+                                trailing={<AddTrackButton track={track} />}
+                            />
                         ))}
                     </Box>
                 </Box>
@@ -366,16 +387,36 @@ export const ArtistPage = ({ id, name, nav }: { id: string; name: string; nav: N
 
 export const PlaylistPage = ({ id, name }: { id: string; name: string }) => {
     const client = useClient();
+    const list = useDiscList();
     const { data, loading, error, retry } = useLoad(() => library.playlistTracks(client, id), [client, id]);
+    const isDiscList = list.playlistId === id;
     return (
         <Box>
             <Typography component="h2" sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.15, overflowWrap: 'anywhere' }}>
                 {name}
             </Typography>
-            <Typography sx={{ color: colors.text3, mb: 2 }}>{data ? library.summaryText(data.length, totalSeconds(data)) : ' '}</Typography>
+            <Typography sx={{ color: colors.text3 }}>{data ? library.summaryText(data.length, totalSeconds(data)) : ' '}</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, mt: 1.5, mb: 2 }}>
+                {isDiscList ? (
+                    <Typography sx={{ color: colors.text2 }}>This playlist is the disc list.</Typography>
+                ) : (
+                    <>
+                        <AddAllButton tracks={data} label="Add all" />
+                        <Button variant="outlined" color="inherit" disabled={!data || data.length === 0} onClick={() => data && adoptPlaylist({ Id: id, Name: name }, data)}>
+                            Use as the disc list
+                        </Button>
+                    </>
+                )}
+            </Box>
             <Box component="ol" sx={listSx}>
                 {data?.map((track, index) => (
-                    <TrackRow key={track.PlaylistItemId ?? `${track.Id}-${index}`} track={track} art={library.trackArt(client, track, 96)} showArtist />
+                    <TrackRow
+                        key={track.PlaylistItemId ?? `${track.Id}-${index}`}
+                        track={track}
+                        art={library.trackArt(client, track, 96)}
+                        showArtist
+                        trailing={isDiscList ? undefined : <AddTrackButton track={track} />}
+                    />
                 ))}
             </Box>
             <Status loading={loading} error={error} onRetry={retry} empty={data?.length === 0 ? 'This playlist is empty.' : null} />

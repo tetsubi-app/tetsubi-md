@@ -299,3 +299,27 @@ export function groupByDisc(tracks: Track[]): { disc: number; tracks: Track[] }[
     }
     return groups;
 }
+
+// MARK: Changing playlists
+
+/** Makes a private music playlist and returns its ID. */
+export async function createPlaylist(client: JellyfinClient, name: string, trackIds: string[]): Promise<string> {
+    const answer = await client.post<{ Id?: string }>('Playlists', {
+        Name: name,
+        Ids: trackIds,
+        UserId: userId(client),
+        MediaType: 'Audio',
+        IsPublic: false,
+    });
+    if (!answer?.Id) throw new JellyfinError('decode', "The server didn't say which playlist it made.");
+    return answer.Id;
+}
+
+/** Replaces a playlist's songs, in this order. */
+export function setPlaylistItems(client: JellyfinClient, playlistId: string, trackIds: string[]): Promise<void> {
+    return client.post<void>(`Playlists/${playlistId}`, { Ids: trackIds });
+}
+
+export function renamePlaylist(client: JellyfinClient, playlistId: string, name: string): Promise<void> {
+    return client.post<void>(`Playlists/${playlistId}`, { Name: name });
+}

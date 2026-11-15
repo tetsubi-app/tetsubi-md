@@ -14,6 +14,8 @@ import Box from '@mui/material/Box';
 import { SplitLayout } from './tetsubi/split-layout';
 import { JellyfinPane } from './jellyfin/jellyfin-pane';
 import { tetsubiTheme } from '../tetsubi/theme';
+import { DiscListPanel, DiscListToast } from './disc-list/disc-list-panel';
+import { startDiscList, useDiscList } from '../disc-list/store';
 import { validateAndLoadEncoders } from '../redux/actions';
 import { EncoderDownloadDialog } from './encoder-download-dialog';
 
@@ -27,7 +29,7 @@ const useStyles = makeStyles()((theme) => ({
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        flex: '1 1 auto',
+        flex: '1 1 0',
         minHeight: 0,
         padding: theme.spacing(2),
         background: 'transparent',
@@ -36,15 +38,34 @@ const useStyles = makeStyles()((theme) => ({
             padding: theme.spacing(3),
         },
     },
+    // With nothing connected, the recorder part only needs room for its Connect button.
+    paperCompact: {
+        flex: '0 0 auto',
+        maxHeight: '60%',
+        overflowY: 'auto',
+    },
+    discList: {
+        flex: '1 1 0',
+        minHeight: 260,
+        display: 'flex',
+        flexDirection: 'column',
+        borderTop: `1px solid ${theme.palette.divider}`,
+    },
+    // Both parts keep a usable height; in a short window the half scrolls instead of squashing them.
     pane: {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        overflowY: 'auto',
+    },
+    paperWithDisc: {
+        flex: '1.2 1 0',
+        minHeight: 340,
     },
     copyrightTypography: {
         flex: '0 0 auto',
         textAlign: 'center',
-        padding: theme.spacing(0, 2, 1.5),
+        padding: theme.spacing(0.75, 2, 1.5),
     },
     backdrop: {
         zIndex: theme.zIndex.drawer + 1000,
@@ -63,17 +84,31 @@ const useStyles = makeStyles()((theme) => ({
 /** The right half: the MiniDisc recorder, as in Web MiniDisc Pro. */
 const MiniDiscPane = () => {
     const { mainView } = useShallowEqualSelector((state) => state.appState);
-    const { classes } = useStyles();
+    const { classes, cx } = useStyles();
+    // The disc list sits under the recorder once signed in to Jellyfin (not in factory mode, which needs the room).
+    const showList = !!useDiscList().account && mainView !== 'FACTORY';
 
     return (
         <div className={classes.pane}>
-            <Paper className={classes.paper} elevation={0} square>
+            <Paper
+                className={cx(classes.paper, {
+                    [classes.paperCompact]: showList && mainView === 'WELCOME',
+                    [classes.paperWithDisc]: showList && mainView === 'MAIN',
+                })}
+                elevation={0}
+                square
+            >
                 {mainView === 'WELCOME' ? <Welcome /> : null}
                 {mainView === 'MAIN' ? <Main /> : null}
                 {mainView === 'FACTORY' ? <Toc /> : null}
 
                 <Box className={classes.controlsContainer}>{mainView === 'MAIN' ? <Controls /> : null}</Box>
             </Paper>
+            {showList ? (
+                <div className={classes.discList}>
+                    <DiscListPanel />
+                </div>
+            ) : null}
             <Typography variant="caption" color="textSecondary" className={classes.copyrightTypography}>
                 {'MiniDisc side based on '}
                 <Link rel="noopener noreferrer" color="inherit" underline="always" target="_blank" href="https://github.com/asivery/webminidisc">
@@ -103,6 +138,9 @@ const InternalApp = () => {
         dispatch(validateAndLoadEncoders(true));
     }, []);
 
+    // Keep the disc list in step with who is signed in to Jellyfin.
+    useEffect(() => startDiscList(), []);
+
     return (
         <React.Fragment>
             <CssBaseline />
@@ -124,6 +162,7 @@ const InternalApp = () => {
             ) : null}
 
             <EncoderDownloadDialog />
+            <DiscListToast />
         </React.Fragment>
     );
 };

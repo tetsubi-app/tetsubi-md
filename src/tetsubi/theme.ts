@@ -91,6 +91,11 @@ export const tetsubiTheme = createTheme({
                 root: { color: '#4fc3ea' },
             },
         },
+        MuiSnackbarContent: {
+            styleOverrides: {
+                root: { backgroundColor: '#1c2550', color: colors.text, border: `1px solid ${colors.line}` },
+            },
+        },
         MuiTooltip: {
             styleOverrides: {
                 tooltip: { backgroundColor: '#1c2550', fontSize: 13 },
