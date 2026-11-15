@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
@@ -116,11 +117,10 @@ const sameAlbum = (album: Album) => album;
 export const HomeTab = ({ nav }: { nav: Navigation }) => {
     const client = useClient();
     const favouritesVersion = useFavouritesVersion();
-    const [shuffle, setShuffle] = useState(0);
 
     const onThisDay = useLoad(() => library.onThisDayAlbums(client), [client]);
     const favourites = useLoad(() => library.favouriteAlbums(client), [client, favouritesVersion]);
-    const random = useLoad(() => library.randomAlbums(client), [client, shuffle]);
+    const random = useLoad(() => library.randomAlbums(client), [client]);
     const playlists = useLoad(() => library.playlists(client), [client]);
     const played = useLoad(() => library.recentlyPlayedAlbums(client), [client]);
     const added = useLoad(() => library.recentlyAddedAlbums(client), [client]);
@@ -140,14 +140,7 @@ export const HomeTab = ({ nav }: { nav: Navigation }) => {
             <SectionHeader title="Favourites" action={<ViewAll title="Favourites" onClick={() => nav.showTab('favourites')} />} />
             <AlbumRow loaded={favourites} albumOf={sameAlbum} empty="No favourite albums yet." nav={nav} />
 
-            <SectionHeader
-                title="Random Albums"
-                action={
-                    <IconButton size="small" aria-label="Pick other random albums" onClick={() => setShuffle((n) => n + 1)} sx={{ color: colors.blue }}>
-                        <ShuffleIcon />
-                    </IconButton>
-                }
-            />
+            <SectionHeader title="Random Albums" action={<ViewAll title="Random Albums" onClick={() => nav.open({ kind: 'random', name: 'Random Albums' })} />} />
             <AlbumRow loaded={random} albumOf={sameAlbum} empty="No albums in this library yet." nav={nav} />
 
             {playlists.data && playlists.data.length > 0 ? (
@@ -166,6 +159,34 @@ export const HomeTab = ({ nav }: { nav: Navigation }) => {
 
             <SectionHeader title="Recently Added" />
             <AlbumRow loaded={added} albumOf={sameAlbum} empty="No recently added music." nav={nav} />
+        </Box>
+    );
+};
+
+/** How many albums the Random Albums page picks at a time. */
+const RANDOM_COUNT = 24;
+
+/** A page of albums picked at random, with a button to pick again. */
+export const RandomPage = ({ nav }: { nav: Navigation }) => {
+    const client = useClient();
+    const [round, setRound] = useState(0);
+    const { data, loading, error, retry } = useLoad(() => library.randomAlbums(client, RANDOM_COUNT), [client, round]);
+    return (
+        <Box>
+            <Typography component="h2" sx={{ fontSize: 26, fontWeight: 700, lineHeight: 1.15, mb: 2.5 }}>
+                Random Albums
+            </Typography>
+            <Box component="ul" sx={{ ...tileGridSx, opacity: loading && data ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+                {data?.map((album) => <AlbumTile key={album.Id} album={album} onOpen={(a) => nav.open({ kind: 'album', id: a.Id, name: a.Name })} />)}
+            </Box>
+            <Status loading={loading && !data} error={error} onRetry={retry} empty={data?.length === 0 ? 'No albums in this library yet.' : null} />
+            {data && data.length > 0 ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 1 }}>
+                    <Button variant="contained" startIcon={<ShuffleIcon />} disabled={loading} onClick={() => setRound((n) => n + 1)}>
+                        Randomise
+                    </Button>
+                </Box>
+            ) : null}
         </Box>
     );
 };

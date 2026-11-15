@@ -30,7 +30,8 @@ import { AlbumRow, AlbumTile, Art, SectionTitle, Status, TrackRow, listSx, tileG
 export type Route =
     | { kind: 'album'; id: string; name: string }
     | { kind: 'artist'; id: string; name: string }
-    | { kind: 'playlist'; id: string; name: string };
+    | { kind: 'playlist'; id: string; name: string }
+    | { kind: 'random'; name: string };
 
 export type TabName = 'home' | 'albums' | 'artists' | 'favourites' | 'playlists';
 

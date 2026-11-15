@@ -17,7 +17,7 @@ import { Search as SearchIcon } from '@mui/icons-material';
 
 import { signOut, useJellyfin } from '../../jellyfin/session';
 import { useDebounced } from './library-hooks';
-import { FavouritesTab, HomeTab } from './home-screen';
+import { FavouritesTab, HomeTab, RandomPage } from './home-screen';
 import { AlbumPage, AlbumsTab, ArtistPage, ArtistsTab, Navigation, PlaylistPage, PlaylistsTab, Route, SearchResults, TabName } from './library-screens';
 
 const TABS: { value: TabName; label: string }[] = [
@@ -193,6 +193,12 @@ export const Library = () => {
                         {route.kind === 'album' ? <AlbumPage key={route.id} id={route.id} name={route.name} /> : null}
                         {route.kind === 'artist' ? <ArtistPage key={route.id} id={route.id} name={route.name} nav={nav} /> : null}
                         {route.kind === 'playlist' ? <PlaylistPage key={route.id} id={route.id} name={route.name} /> : null}
+                        {/* Stays mounted under an album opened from it, so going back shows the same picks. */}
+                        {stack.some((item) => item.kind === 'random') ? (
+                            <Box sx={{ display: route.kind === 'random' ? 'block' : 'none' }}>
+                                <RandomPage nav={nav} />
+                            </Box>
+                        ) : null}
                     </Box>
                 </Box>
             ) : null}

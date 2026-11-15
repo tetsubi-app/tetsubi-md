@@ -66,7 +66,14 @@ export default function SplitButton(props: SplitButtonProps) {
 
     return (
         <div className={boxClassName}>
-            <ButtonGroup variant="contained" ref={anchorRef} aria-label="Connect" disabled={loading}>
+            <ButtonGroup
+                variant="contained"
+                ref={anchorRef}
+                aria-label="Connect"
+                disabled={loading}
+                // Tetsubi MD: a half-opaque white line between the two halves, so they read as two buttons.
+                sx={{ '& .MuiButtonGroup-grouped:not(:last-of-type)': { borderRight: '1px solid rgba(255, 255, 255, 0.5) !important' } }}
+            >
                 <Button {...buttonProps} sx={solidSx} onClick={options[selectedIndex].handler} style={{ minWidth: width ? width * 0.8 : undefined }}>
                     {loading ? <CircularProgress style={{ width: 24, height: 24 }} /> : options[selectedIndex].name}
                 </Button>
