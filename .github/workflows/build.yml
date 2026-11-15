@@ -19,5 +19,7 @@ jobs:
           (cd extra/sar-packager && npm ci)
           (cd encoders/atracdenc && npm ci)
           (cd encoders/remote-encoder && npm ci)
+      - name: Test
+        run: npm test
       - name: Build
         run: npm run build:site

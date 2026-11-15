@@ -205,13 +205,13 @@ export const Welcome = (props: {}) => {
     return (
         <React.Fragment>
             <Box className={classes.headBox}>
-                <Typography component="h1" variant="h4">
-                    Tetsubi MD
+                <Typography component="h2" variant="h5">
+                    MiniDisc
                 </Typography>
                 <TopMenu />
             </Box>
-            <Typography component="h2" variant="body2">
-                Brings NetMD Devices to the Web
+            <Typography component="p" variant="body2">
+                Connect a recorder to write to a disc
             </Typography>
             <Box className={classes.main}>
                 {browserSupported ? (

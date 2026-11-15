@@ -1,0 +1,59 @@
+/* Tetsubi MD: typeface and page background, matching the Tetsubi app and website. */
+
+@font-face {
+    font-family: 'DEKIRU Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('./fonts/DekiruSans-Regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'DEKIRU Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('./fonts/DekiruSans-Medium.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'DEKIRU Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('./fonts/DekiruSans-SemiBold.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'DEKIRU Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('./fonts/DekiruSans-Bold.woff2') format('woff2');
+}
+
+:root {
+    color-scheme: dark;
+}
+
+/* The same purple-to-teal wash as the app's background picture. */
+html {
+    background-color: #000b25;
+    background-image:
+        radial-gradient(ellipse 70% 45% at 55% 12%, rgba(64, 12, 82, 0.95), transparent 70%),
+        radial-gradient(ellipse 60% 40% at 60% 55%, rgba(26, 18, 100, 0.8), transparent 70%),
+        radial-gradient(ellipse 60% 35% at 90% 100%, rgba(0, 70, 90, 0.75), transparent 70%),
+        linear-gradient(180deg, #2a0a4a 0%, #120a45 45%, #031540 80%, #022a45 100%);
+}
+
+body {
+    background: transparent;
+}
+
+/* Thin scrollbars that suit the dark panes. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+}
+
+:focus-visible {
+    outline: 2px solid #4fc3ea;
+    outline-offset: 2px;
+}

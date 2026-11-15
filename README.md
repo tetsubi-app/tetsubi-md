@@ -4,7 +4,7 @@ Write music from your [Jellyfin](https://jellyfin.org/) server straight to a Min
 
 Tetsubi MD is a companion to [Tetsubi](https://tetsubi.app/), the Jellyfin music player. One half of the screen browses your Jellyfin library; the other half is a MiniDisc writer. Add albums and songs to the disc list, and they are saved as a Jellyfin playlist named after the disc and written to the recorder.
 
-> **Status:** early development. The MiniDisc half works as upstream does; the Jellyfin half is being built.
+> **Status:** early development. The MiniDisc half works as upstream does. On the Jellyfin half you can sign in (Quick Connect or username and password); the library browser comes next.
 
 ## Based on Web MiniDisc Pro
 
@@ -31,6 +31,7 @@ npm ci
 
 npm run prepare-dev-encoders   # once, builds the ATRAC encoders for the dev server
 npm start                      # dev server on localhost
+npm test                       # unit tests
 npm run build                  # production build in dist/
 npm run build:site             # production build for https://tetsubi.app/minidisc/
 ```
@@ -38,6 +39,13 @@ npm run build:site             # production build for https://tetsubi.app/minidi
 The dev server offers a mock recorder ("MockMD") on the connect screen, so most things can be tried without hardware.
 
 The WASM modules in `public/` are prebuilt; `extra/` explains how to rebuild them.
+
+## Layout of the code
+
+- `src/jellyfin/` — the Jellyfin client: server address, sign-in, saved session
+- `src/components/jellyfin/` — the library half of the screen
+- `src/components/tetsubi/`, `src/tetsubi/` — the frame around both halves, theme, fonts
+- everything else — Web MiniDisc Pro, changed as little as possible so upstream fixes can be merged
 
 ## Releasing
 
@@ -51,6 +59,7 @@ The WASM modules in `public/` are prebuilt; `extra/` explains how to rebuild the
 - [FFmpeg](https://www.ffmpeg.org/) and [ffmpegjs](https://github.com/ffmpegjs/FFmpeg), to read audio files
 - [atracdenc](https://github.com/dcherednik/atracdenc/), for ATRAC3 encoding (LP2 and LP4)
 - [Emscripten](https://emscripten.org/), to run FFmpeg and atracdenc in the browser
+- DEKIRU Sans, a modified [IBM Plex Sans](https://github.com/IBM/plex) (SIL Open Font License; see `src/tetsubi/fonts/`)
 - [Jellyfin](https://jellyfin.org/). Tetsubi MD is not made by or connected with the Jellyfin project.
 
 ## Licence

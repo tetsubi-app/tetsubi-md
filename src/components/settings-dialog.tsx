@@ -338,20 +338,7 @@ export const SettingsDialog = (props: {}) => {
         >
             <DialogTitle id="settings-dialog-slide-title">Settings</DialogTitle>
             <DialogContent>
-                <DialogContentText className={classes.header}>Appearance</DialogContentText>
-                <SimpleField name="Color theme" classes={classes}>
-                    <Select className={classes.wider} value={colorTheme} onChange={handleThemeChange}>
-                        <MenuItem value="light">Light</MenuItem>
-                        <MenuItem value="dark">Dark</MenuItem>
-                        <MenuItem value="system">Device Theme</MenuItem>
-                    </Select>
-                </SimpleField>
-                <SimpleField name="Stretch Tetsubi MD to fill the screen vertically" classes={classes} formControl={true}>
-                    <Switch checked={pageFullHeight} onChange={handlePageFullHeightChange} />
-                </SimpleField>
-                <SimpleField name="Stretch Tetsubi MD to fill the screen horizontally" classes={classes} formControl={true}>
-                    <Switch checked={pageFullWidth} onChange={handlePageFullWidthChange} />
-                </SimpleField>
+                {/* Tetsubi MD has one look and fills the window, so upstream's appearance settings are not offered. */}
                 <NativeFields classes={classes} section="Appearance" />
 
                 <DialogContentText className={classes.header}>Functionality</DialogContentText>
