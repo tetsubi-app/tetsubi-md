@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Write music from your Jellyfin server straight to a MiniDisc, using only a web browser."
+    />
+    <link rel="apple-touch-icon" href="MiniDisc192.png" />
+    <title>Tetsubi MD</title>
+    <script type="module" crossorigin src="/minidisc/assets/index-Bkho6YiO.js"></script>
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/ParseError-m8LVIMfr.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/Util-jcQl0x-8.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/APEv2Parser-BUAWi27R.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/ID3v1Parser-BCGeoW6E.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/ID3v2Token-B_VZMbEw.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/types-gz03Z04a.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/createSvgIcon-B5o5wQVf.js">
+    <link rel="modulepreload" crossorigin href="/minidisc/assets/manage-encoders-dialog-CHGDowDM.js">
+    <link rel="stylesheet" crossorigin href="/minidisc/assets/index-CchOZQUo.css">
+  </head>
+  <body>
+    <script>
+    try {
+      if (location.protocol === 'http:' && !location.host.match(/^localhost/gm)) {
+        // Make sure we're on https/file, or WebUSB won't work.
+        location.replace(`https:${location.href.substring(location.protocol.length)}`);
+        console.log('Redirecting to https....');
+      }
+    } catch (err) {
+      console.log(err)
+    }
+    </script>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
