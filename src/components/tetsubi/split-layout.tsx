@@ -105,7 +105,14 @@ export const SplitLayout = ({ library, minidisc }: { library: React.ReactNode; m
     return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Box component="header" sx={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 1.25, px: 2.5, pt: 1.5, pb: 0.5 }}>
-                <Box component="img" src={discUrl} alt="" sx={{ width: 30, height: 30 }} />
+                <Box
+                    component="a"
+                    href="https://tetsubi.app/"
+                    aria-label="Tetsubi home page"
+                    sx={{ display: 'flex', borderRadius: '50%', transition: 'opacity 0.15s', '&:hover': { opacity: 0.8 } }}
+                >
+                    <Box component="img" src={discUrl} alt="" sx={{ width: 30, height: 30 }} />
+                </Box>
                 <Typography component="h1" sx={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.01em' }}>
                     Tetsubi MD{' '}
                     <span aria-hidden="true">💽</span>

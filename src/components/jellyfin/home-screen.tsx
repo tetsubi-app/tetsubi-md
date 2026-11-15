@@ -66,14 +66,14 @@ const RowPlaceholder = () => (
 function AlbumRow<T>({
     loaded,
     albumOf,
-    captionOf,
+    badgeOf,
     empty,
     nav,
 }: {
     loaded: Loaded<T[]>;
     albumOf: (item: T) => Album;
-    /** A line under the card, such as "30 years ago". */
-    captionOf?: (item: T) => string;
+    /** A lozenge on the cover, such as "30 years ago". */
+    badgeOf?: (item: T) => string;
     empty: string;
     nav: Navigation;
 }) {
@@ -85,7 +85,7 @@ function AlbumRow<T>({
             {data.map((item) => {
                 const album = albumOf(item);
                 return (
-                    <AlbumTile key={album.Id} album={album} caption={captionOf?.(item)} onOpen={(a) => nav.open({ kind: 'album', id: a.Id, name: a.Name })} />
+                    <AlbumTile key={album.Id} album={album} badge={badgeOf?.(item)} onOpen={(a) => nav.open({ kind: 'album', id: a.Id, name: a.Name })} />
                 );
             })}
         </Box>
@@ -133,7 +133,7 @@ export const HomeTab = ({ nav }: { nav: Navigation }) => {
             {showOnThisDay ? (
                 <>
                     <SectionHeader title="On This Day" />
-                    <AlbumRow loaded={onThisDay} albumOf={(entry) => entry.album} captionOf={(entry) => library.anniversaryText(entry.yearsAgo)} empty="" nav={nav} />
+                    <AlbumRow loaded={onThisDay} albumOf={(entry) => entry.album} badgeOf={(entry) => library.anniversaryText(entry.yearsAgo)} empty="" nav={nav} />
                 </>
             ) : null}
 

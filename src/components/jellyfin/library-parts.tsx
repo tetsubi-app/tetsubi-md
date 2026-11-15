@@ -131,13 +131,13 @@ export const AlbumTile = ({
     album,
     onOpen,
     showArtist = true,
-    caption,
+    badge,
 }: {
     album: Album;
     onOpen: (album: Album) => void;
     showArtist?: boolean;
-    /** Shown in place of the year, such as "30 years ago". */
-    caption?: string;
+    /** A lozenge over the cover's top right corner, such as "30 years ago". */
+    badge?: string;
 }) => {
     const client = useClient();
     const artist = albumArtistName(album);
@@ -147,14 +147,40 @@ export const AlbumTile = ({
                 onClick={() => onOpen(album)}
                 sx={{ display: 'block', width: '100%', textAlign: 'center', borderRadius: '10px', '&:hover img': { opacity: 0.85 } }}
             >
-                <Art src={albumArt(client, album, 360)} />
+                <Box sx={{ position: 'relative' }}>
+                    <Art src={albumArt(client, album, 360)} />
+                    {badge ? (
+                        // As on the app's cards: a small capsule in the accent blue, 70% opaque.
+                        <Box
+                            component="span"
+                            sx={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                px: '6px',
+                                py: '3px',
+                                borderRadius: '999px',
+                                backgroundColor: 'rgba(10, 132, 255, 0.7)',
+                                color: '#fff',
+                                // The button it sits in doesn't pass the typeface down.
+                                fontFamily: (theme) => theme.typography.fontFamily,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                lineHeight: 1.2,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {badge}
+                        </Box>
+                    ) : null}
+                </Box>
                 <Typography sx={{ fontSize: 14, fontWeight: 600, lineHeight: 1.25, mt: 1, ...twoLines }}>{album.Name}</Typography>
                 {showArtist && artist ? (
                     <Typography noWrap sx={{ fontSize: 13, color: colors.text2 }}>
                         {artist}
                     </Typography>
                 ) : null}
-                {caption || album.ProductionYear ? <Typography sx={{ fontSize: 13, color: colors.text3 }}>{caption ?? album.ProductionYear}</Typography> : null}
+                {album.ProductionYear ? <Typography sx={{ fontSize: 13, color: colors.text3 }}>{album.ProductionYear}</Typography> : null}
             </ButtonBase>
         </Box>
     );
