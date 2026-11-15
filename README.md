@@ -4,7 +4,7 @@ Write music from your [Jellyfin](https://jellyfin.org/) server straight to a Min
 
 Tetsubi MD is a companion to [Tetsubi](https://tetsubi.app/), the Jellyfin music player. One half of the screen browses your Jellyfin library; the other half is a MiniDisc writer. Add albums and songs to the disc list, and they are saved as a Jellyfin playlist named after the disc and written to the recorder.
 
-> **Status:** early development. The MiniDisc half works as upstream does. On the Jellyfin half you can sign in (Quick Connect or username and password); the library browser comes next.
+> **Status:** early development. The MiniDisc half works as upstream does. On the Jellyfin half you can sign in (Quick Connect or username and password) and browse albums, artists, playlists and search. Adding music to a disc comes next.
 
 ## Based on Web MiniDisc Pro
 
@@ -42,8 +42,8 @@ The WASM modules in `public/` are prebuilt; `extra/` explains how to rebuild the
 
 ## Layout of the code
 
-- `src/jellyfin/` — the Jellyfin client: server address, sign-in, saved session
-- `src/components/jellyfin/` — the library half of the screen
+- `src/jellyfin/` — the Jellyfin client: server address, sign-in, saved session, library queries
+- `src/components/jellyfin/` — the library half of the screen: sign-in, tabs, search, album, artist and playlist pages
 - `src/components/tetsubi/`, `src/tetsubi/` — the frame around both halves, theme, fonts
 - everything else — Web MiniDisc Pro, changed as little as possible so upstream fixes can be merged
 

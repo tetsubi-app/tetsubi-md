@@ -106,18 +106,8 @@ export const SplitLayout = ({ library, minidisc }: { library: React.ReactNode; m
             <Box component="header" sx={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 1.25, px: 2.5, pt: 1.5, pb: 0.5 }}>
                 <Box component="img" src={discUrl} alt="" sx={{ width: 30, height: 30 }} />
                 <Typography component="h1" sx={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.01em' }}>
-                    Tetsubi{' '}
-                    <Box
-                        component="span"
-                        sx={{
-                            backgroundImage: `linear-gradient(100deg, ${colors.pink}, ${colors.blue})`,
-                            backgroundClip: 'text',
-                            WebkitBackgroundClip: 'text',
-                            color: 'transparent',
-                        }}
-                    >
-                        MD
-                    </Box>
+                    Tetsubi MD{' '}
+                    <span aria-hidden="true">💽</span>
                 </Typography>
             </Box>
 
