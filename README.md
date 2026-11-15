@@ -4,7 +4,7 @@ Write music from your [Jellyfin](https://jellyfin.org/) server straight to a Min
 
 Tetsubi MD is a companion to [Tetsubi](https://tetsubi.app/), the Jellyfin music player. One half of the screen browses your Jellyfin library; the other half is a MiniDisc writer. Add albums and songs to the disc list, and they are saved as a Jellyfin playlist named after the disc and written to the recorder.
 
-> **Status:** working end to end with the mock recorder: sign in to Jellyfin, browse, build a disc list (saved as a Jellyfin playlist on every change) and write it to the disc. Not yet proven on hardware.
+> **Status:** working end to end, including writes to a real NetMD recorder: sign in to Jellyfin, browse, build a disc list (saved as a Jellyfin playlist on every change) and write it to the disc.
 
 ## Based on Web MiniDisc Pro
 
