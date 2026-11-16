@@ -139,6 +139,7 @@ export const SplitLayout = ({ library, minidisc }: { library: React.ReactNode; m
                     minHeight: 0,
                     display: 'flex',
                     p: 1.5,
+                    pb: 1,
                     userSelect: dragging ? 'none' : undefined,
                     cursor: dragging ? 'col-resize' : undefined,
                 }}
@@ -198,6 +199,29 @@ export const SplitLayout = ({ library, minidisc }: { library: React.ReactNode; m
                     sx={{ ...panelSx, flex: '1 1 0', display: narrow && tab !== 'minidisc' ? 'none' : 'block' }}
                 >
                     {minidisc}
+                </Box>
+            </Box>
+            {/* The same footer as tetsubi.app, kept to one slim line so the two halves keep their height. */}
+            <Box
+                component="footer"
+                sx={{
+                    flex: '0 0 auto',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    justifyContent: 'space-between',
+                    columnGap: 2.5,
+                    rowGap: 0.25,
+                    px: 2.5,
+                    pb: 1.25,
+                    fontSize: 13,
+                    color: colors.text3,
+                }}
+            >
+                <span>© {new Date().getFullYear()} DEKIRU Ltd. Made with AI. Tetsubi is not affiliated with the Jellyfin project.</span>
+                <Box component="nav" aria-label="Tetsubi" sx={{ display: 'flex', gap: 2.5, '& a': { color: 'inherit' }, '& a:hover': { color: colors.text } }}>
+                    <a href="https://tetsubi.app/support.html">Support</a>
+                    <a href="https://tetsubi.app/privacy.html">Privacy</a>
+                    <a href="https://github.com/tetsubi-app">GitHub</a>
                 </Box>
             </Box>
         </Box>
